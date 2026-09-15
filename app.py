@@ -11,6 +11,7 @@ import auth
 import data_manager
 from reporte_ganancia_ciclo import reporte_ganancia_ciclo as modulo_reporte
 from historico_semanal import historico_semanal as modulo_historico
+from historial_general import historial_general as modulo_historial_general
 from operacion_externa import operacion_externa as modulo_operacion
 from ajustes import ajustes as modulo_ajustes
 
@@ -19,6 +20,7 @@ importlib.reload(auth)
 importlib.reload(data_manager)
 importlib.reload(modulo_reporte)
 importlib.reload(modulo_historico)
+importlib.reload(modulo_historial_general)
 importlib.reload(modulo_operacion)
 importlib.reload(modulo_ajustes)
 
@@ -220,6 +222,7 @@ if "vista_actual" not in st.session_state:
 OPCIONES_MENU = {
     "Reporte Ganancia Por Ciclo": "⚡",
     "Histórico Semanal": "📊",
+    "Historial General": "📜",
     "Registrar Operación Externa": "➕",
     "Ajustes": "⚙️"
 }
@@ -253,6 +256,10 @@ if vista == "Reporte Ganancia Por Ciclo":
 elif vista == "Histórico Semanal":
     cargar_css("historico_semanal/historico_semanal.css")
     modulo_historico.render_vista()
+
+elif vista == "Historial General":
+    cargar_css("historial_general/historial_general.css")
+    modulo_historial_general.render_vista()
 
 elif vista == "Registrar Operación Externa":
     cargar_css("operacion_externa/operacion_externa.css")

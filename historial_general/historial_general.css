@@ -1,0 +1,424 @@
+/* ==========================================================================
+   HISTORIAL GENERAL - ESTILOS RESPONSIVOS Y TARJETAS
+   ========================================================================== */
+
+/* Banner de período activo */
+.hg-banner-periodo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-left: 4px solid #58a6ff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+    font-size: 0.90rem;
+    color: #f0f6fc;
+}
+
+.hg-badge-count {
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #58a6ff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   GRILLA DE KPIS PRINCIPALES
+   ========================================================================== */
+.kpis-grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 6px;
+    margin-bottom: 18px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.kpi-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 88px;
+}
+
+.kpi-card:hover {
+    border-color: #58a6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.kpi-card-profit {
+    background: linear-gradient(145deg, #132418 0%, #161b22 100%);
+    border: 1px solid rgba(63, 185, 80, 0.5);
+    box-shadow: 0 4px 12px rgba(63, 185, 80, 0.15);
+}
+
+.kpi-card-sell {
+    background: linear-gradient(145deg, #132230 0%, #161b22 100%);
+    border: 1px solid rgba(56, 139, 253, 0.45);
+    box-shadow: 0 4px 12px rgba(56, 139, 253, 0.12);
+}
+
+.kpi-card-buy {
+    background: linear-gradient(145deg, #271f16 0%, #161b22 100%);
+    border: 1px solid rgba(210, 153, 34, 0.45);
+    box-shadow: 0 4px 12px rgba(210, 153, 34, 0.12);
+}
+
+.kpi-card-header {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8b949e;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.kpi-card-val {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: #f0f6fc;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+.kpi-unit {
+    font-size: 0.80rem;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+.kpi-card-sub {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #8b949e;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Responsividad para los 5 KPIs */
+@media (max-width: 992px) {
+    .kpis-grid-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        row-gap: 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    .kpis-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        row-gap: 12px;
+        margin-bottom: 20px;
+    }
+    .kpi-card {
+        padding: 13px 8px;
+        min-height: 86px;
+    }
+    .kpi-card.kpi-hero {
+        grid-column: span 2;
+        padding: 14px 10px;
+    }
+    .kpi-card.kpi-hero .kpi-card-val {
+        font-size: 1.35rem;
+    }
+}
+
+@media (max-width: 340px) {
+    .kpis-grid-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        row-gap: 10px;
+    }
+    .kpi-card.kpi-hero {
+        grid-column: span 1;
+    }
+}
+
+/* ==========================================================================
+   TARJETAS RESPONSIVAS DE HISTÓRICO DE CICLOS (CONTENEDOR UNIFICADO)
+   ========================================================================== */
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content) {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 12px !important;
+    padding: 14px 16px 10px 16px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2) !important;
+    box-sizing: border-box !important;
+    transition: transform 0.15s ease, border-color 0.15s ease !important;
+    gap: 0px !important;
+}
+
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content.pos) {
+    border-left: 5px solid #3fb950 !important;
+}
+
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content.neg) {
+    border-left: 5px solid #f85149 !important;
+}
+
+.cycle-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.cycle-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #f0f6fc;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.03em;
+}
+
+.cycle-profit-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.cycle-profit-text.pos {
+    color: #3fb950;
+}
+
+.cycle-profit-text.neg {
+    color: #f85149;
+}
+
+.cycle-mid-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #8b949e;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #21262d;
+    padding-bottom: 8px;
+}
+
+.cycle-pct-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.cycle-pct-badge.pos {
+    background-color: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+}
+
+.cycle-pct-badge.neg {
+    background-color: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+}
+
+.cycle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+    margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+    .cycle-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.cycle-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cycle-cell-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8b949e;
+    margin-bottom: 2px;
+}
+
+.cycle-cell-value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e6edf3;
+    white-space: nowrap;
+}
+
+/* Fila inferior de ajuste y botón minimalista con su propio interlineado divisorio */
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    border-top: 1px dashed #30363d !important;
+    margin-top: 16px !important;
+    padding-top: 10px !important;
+    margin-bottom: 2px !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:first-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 36px) !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:last-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child {
+    flex: 0 0 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+.cycle-inner-ajuste-pill {
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) div[data-testid="stButton"],
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) div[data-testid="stButton"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Botón minimalista de esquina */
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button {
+    width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    background: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #8b949e !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button p,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button p {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button:hover,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
+    background: #30363d !important;
+    border-color: #58a6ff !important;
+    color: #58a6ff !important;
+    transform: scale(1.08) !important;
+}
+
+/* Asegurar fila horizontal continua en pantallas móviles */
+@media (max-width: 768px) {
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        border-top: 1px dashed #30363d !important;
+        margin-top: 16px !important;
+        padding-top: 10px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:first-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: calc(100% - 36px) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:last-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child {
+        flex: 0 0 28px !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        max-width: 28px !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
+}

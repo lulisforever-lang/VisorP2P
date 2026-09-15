@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from zoneinfo import ZoneInfo
 import pandas as pd
 import streamlit as st
@@ -75,6 +75,57 @@ def get_historico() -> pd.DataFrame:
     df = pd.read_csv(DB_HISTORICO_FILE)
     return df
 
+def enriquecer_historico_fechas(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Enriquece el DataFrame histórico con conversiones numéricas y temporales
+    (Día, Semana Lun-Dom, Mes, Año) para filtrado flexible.
+    """
+    if df is None or df.empty or "Fecha_Hora" not in df.columns:
+        return pd.DataFrame(columns=COLUMNS_HISTORICO)
+
+    df = df.copy()
+    for col in ["Capital", "Ganancia_Pct", "Ajuste", "USDT_Ganado", "Tasa_Venta", "Tasa_Compra", "Comision_Pct"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+    if "Ciclo" in df.columns:
+        df["Ciclo"] = pd.to_numeric(df["Ciclo"], errors="coerce").fillna(0).astype(int)
+
+    df["DT_Parsed"] = pd.to_datetime(df["Fecha_Hora"], dayfirst=True, errors="coerce")
+    df["Fecha_Date"] = df["DT_Parsed"].dt.date
+
+    nombres_dias = {0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"}
+    df["Dia_Semana"] = df["DT_Parsed"].dt.dayofweek.map(nombres_dias)
+
+    # Inicio (Lunes) y Fin (Domingo) de la semana de cada ciclo
+    df["Lunes_Semana"] = df["DT_Parsed"].apply(
+        lambda dt: (dt.date() - timedelta(days=dt.weekday())) if pd.notnull(dt) else None
+    )
+    df["Domingo_Semana"] = df["Lunes_Semana"].apply(
+        lambda lun: (lun + timedelta(days=6)) if lun else None
+    )
+    df["Semana_Key"] = df["Lunes_Semana"].apply(
+        lambda lun: lun.strftime("%Y-%m-%d") if lun else "sin-fecha"
+    )
+    df["Semana_Label"] = df.apply(
+        lambda r: f"Semana del {r['Lunes_Semana'].strftime('%d/%m/%Y')} al {r['Domingo_Semana'].strftime('%d/%m/%Y')}" if r['Lunes_Semana'] else "Sin Fecha",
+        axis=1
+    )
+    df["Mes_Key"] = df["DT_Parsed"].apply(lambda dt: dt.strftime("%Y-%m") if pd.notnull(dt) else "sin-mes")
+    nombres_meses = {1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"}
+    df["Mes_Label"] = df["DT_Parsed"].apply(
+        lambda dt: f"{nombres_meses.get(dt.month, '')} {dt.year}" if pd.notnull(dt) else "Sin Mes"
+    )
+    df["Anio"] = df["DT_Parsed"].apply(lambda dt: int(dt.year) if pd.notnull(dt) else 0)
+    return df
+
+def get_rango_semana_actual() -> tuple:
+    """Devuelve (lunes_date, domingo_date, etiqueta_str) para la semana de hoy."""
+    now = get_now_local().date()
+    lunes = now - timedelta(days=now.weekday())
+    domingo = lunes + timedelta(days=6)
+    label = f"Semana del {lunes.strftime('%d/%m/%Y')} al {domingo.strftime('%d/%m/%Y')}"
+    return lunes, domingo, label
+
 def guardar_ciclo(nuevo_registro: dict) -> bool:
     df_actual = get_historico()
     nuevo_df = pd.DataFrame([nuevo_registro])
@@ -94,23 +145,6 @@ def guardar_ciclo(nuevo_registro: dict) -> bool:
             return True
         except Exception as e:
             st.error(f"Error sincronizando ciclo con Google Sheets: {e}")
-            return False
-
-    return True
-
-def reiniciar_semana() -> bool:
-    df_vacio = pd.DataFrame(columns=COLUMNS_HISTORICO)
-    
-    # 1. Limpiar local
-    df_vacio.to_csv(DB_HISTORICO_FILE, index=False)
-
-    # 2. Limpiar Google Sheets
-    conn = _get_gsheets_connection()
-    if conn is not None:
-        try:
-            conn.update(worksheet="historico_ciclos", data=df_vacio)
-        except Exception as e:
-            st.error(f"Error reiniciando semana en Google Sheets: {e}")
             return False
 
     return True

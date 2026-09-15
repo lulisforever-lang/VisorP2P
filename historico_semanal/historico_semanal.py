@@ -68,27 +68,45 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
         if st.button("Cancelar", type="secondary", use_container_width=True, key=f"btn_cancel_aj_{c_num}"):
             st.rerun()
 
-@st.dialog("⚠️ Confirmar Reinicio de Semana")
-def confirmar_reinicio_dialog():
-    st.write("¿Estás seguro de que deseas **reiniciar la semana**?")
-    st.warning("⚠️ Esta acción borrará todos los ciclos registrados en el histórico actual. Esta operación no se puede deshacer.")
-    col_d1, col_d2 = st.columns(2)
-    with col_d1:
-        if st.button("🗑️ Sí, borrar todo", type="primary", use_container_width=True):
-            data_manager.reiniciar_semana()
-            st.toast("Semana reiniciada con éxito")
-            st.rerun()
-    with col_d2:
-        if st.button("Cancelar", type="secondary", use_container_width=True):
-            st.rerun()
-
 def render_vista():
     st.title("📊 Histórico Semanal y Liquidación de Operador")
 
-    col_meta1, col_meta2 = st.columns([3, 2])
-    with col_meta1:
+    df_all = data_manager.get_historico()
+    df_all = data_manager.enriquecer_historico_fechas(df_all)
+
+    # Rango de la semana en curso (Lunes a Domingo)
+    lunes_act, domingo_act, label_act = data_manager.get_rango_semana_actual()
+    key_actual = lunes_act.strftime("%Y-%m-%d")
+
+    # Armar opciones de semanas disponibles (de más reciente a más antigua)
+    semanas_dict = {
+        key_actual: f"🌟 Semana Actual ({lunes_act.strftime('%d/%m')} al {domingo_act.strftime('%d/%m/%Y')})"
+    }
+
+    if not df_all.empty and "Lunes_Semana" in df_all.columns:
+        df_valid = df_all.dropna(subset=["Lunes_Semana"]).sort_values("Lunes_Semana", ascending=False)
+        for _, row in df_valid.drop_duplicates(subset=["Semana_Key"]).iterrows():
+            k = row["Semana_Key"]
+            if k != key_actual and row["Lunes_Semana"]:
+                l_d = row["Lunes_Semana"]
+                d_d = row["Domingo_Semana"]
+                semanas_dict[k] = f"📁 Semana del {l_d.strftime('%d/%m')} al {d_d.strftime('%d/%m/%Y')}"
+
+    opciones_keys = list(semanas_dict.keys())
+
+    # Fila superior: Selector de semana y meta semanal
+    col_sel_sem, col_meta, col_comision = st.columns([1.6, 1.2, 1.2])
+    with col_sel_sem:
+        semana_sel_key = st.selectbox(
+            "📅 Período Semanal:",
+            options=opciones_keys,
+            format_func=lambda k: semanas_dict.get(k, k),
+            index=0,
+            key="sel_semana_historico"
+        )
+    with col_meta:
         meta_semanal = st.number_input("🎯 Meta Semanal (USDT):", min_value=100.0, value=2500.0, step=100.0)
-    with col_meta2:
+    with col_comision:
         st.caption("Estructura de Comisión:")
         st.markdown(
             '<div class="comision-info-pill">'
@@ -97,121 +115,119 @@ def render_vista():
             unsafe_allow_html=True
         )
 
-    df_hist = data_manager.get_historico()
+    # Filtrar ciclos pertenecientes a la semana seleccionada
+    if not df_all.empty and "Semana_Key" in df_all.columns:
+        df_hist = df_all[df_all["Semana_Key"] == semana_sel_key].copy()
+    else:
+        df_hist = pd.DataFrame(columns=data_manager.COLUMNS_HISTORICO)
 
-    if not df_hist.empty:
-        df_hist["Capital"] = pd.to_numeric(df_hist["Capital"], errors="coerce").fillna(0.0)
-        df_hist["Ganancia_Pct"] = pd.to_numeric(df_hist["Ganancia_Pct"], errors="coerce").fillna(0.0)
-        df_hist["Ajuste"] = pd.to_numeric(df_hist["Ajuste"], errors="coerce").fillna(0.0)
-        df_hist["USDT_Ganado"] = pd.to_numeric(df_hist["USDT_Ganado"], errors="coerce").fillna(0.0)
+    total_ganado_semana = df_hist["USDT_Ganado"].sum() if not df_hist.empty else 0.0
+    restante_meta = total_ganado_semana - meta_semanal
+    fondo_total_20 = total_ganado_semana * 0.20
+    pago_operador_80 = fondo_total_20 * 0.80
+    fondo_seguro_20 = fondo_total_20 * 0.20
 
-        total_ganado_semana = df_hist["USDT_Ganado"].sum()
-        restante_meta = total_ganado_semana - meta_semanal
-        fondo_total_20 = total_ganado_semana * 0.20
-        pago_operador_80 = fondo_total_20 * 0.80
-        fondo_seguro_20 = fondo_total_20 * 0.20
+    color_rest = "#f85149" if restante_meta < 0 else "#3fb950"
+    sub_rest = "Falta para cumplir" if restante_meta < 0 else "Meta superada"
+    sign_tot = "+" if total_ganado_semana >= 0 else ""
 
-        color_rest = "#f85149" if restante_meta < 0 else "#3fb950"
-        sub_rest = "Falta para cumplir" if restante_meta < 0 else "Meta superada"
-        sign_tot = "+" if total_ganado_semana >= 0 else ""
+    kpis_html = [
+        (
+            f'<div class="kpi-card">'
+            f'<div class="kpi-card-header">Meta Semanal</div>'
+            f'<div class="kpi-card-val">{meta_semanal:,.2f} <span class="kpi-unit">USDT</span></div>'
+            f'<div class="kpi-card-sub">Objetivo Lunes a Viernes</div>'
+            f'</div>'
+        ),
+        (
+            f'<div class="kpi-card kpi-card-restante">'
+            f'<div class="kpi-card-header">Restante</div>'
+            f'<div class="kpi-card-val" style="color:{color_rest};">{restante_meta:+,.2f} <span class="kpi-unit">USDT</span></div>'
+            f'<div class="kpi-card-sub">{sub_rest}</div>'
+            f'</div>'
+        ),
+        (
+            f'<div class="kpi-card kpi-card-profit kpi-hero">'
+            f'<div class="kpi-card-header" style="color:#7ee787;">Total USDT Ganado</div>'
+            f'<div class="kpi-card-val" style="color:#3fb950;">{sign_tot}{total_ganado_semana:,.2f} <span class="kpi-unit">USDT</span></div>'
+            f'<div class="kpi-card-sub">Suma de ciclos cerrados</div>'
+            f'</div>'
+        ),
+        (
+            f'<div class="kpi-card kpi-card-sell">'
+            f'<div class="kpi-card-header" style="color:#79c0ff;">Pago Operador (80%)</div>'
+            f'<div class="kpi-card-val" style="color:#58a6ff;">{pago_operador_80:,.2f} <span class="kpi-unit">USDT</span></div>'
+            f'<div class="kpi-card-sub">80% de comisión generada</div>'
+            f'</div>'
+        ),
+        (
+            f'<div class="kpi-card kpi-card-buy">'
+            f'<div class="kpi-card-header" style="color:#e3b341;">Fondo Respaldo (20%)</div>'
+            f'<div class="kpi-card-val" style="color:#e3b341;">{fondo_seguro_20:,.2f} <span class="kpi-unit">USDT</span></div>'
+            f'<div class="kpi-card-sub">Seguro contra pérdidas</div>'
+            f'</div>'
+        ),
+    ]
 
-        kpis_html = [
-            (
-                f'<div class="kpi-card">'
-                f'<div class="kpi-card-header">Meta Semanal</div>'
-                f'<div class="kpi-card-val">{meta_semanal:,.2f} <span class="kpi-unit">USDT</span></div>'
-                f'<div class="kpi-card-sub">Objetivo Lunes a Viernes</div>'
-                f'</div>'
-            ),
-            (
-                f'<div class="kpi-card kpi-card-restante">'
-                f'<div class="kpi-card-header">Restante</div>'
-                f'<div class="kpi-card-val" style="color:{color_rest};">{restante_meta:+,.2f} <span class="kpi-unit">USDT</span></div>'
-                f'<div class="kpi-card-sub">{sub_rest}</div>'
-                f'</div>'
-            ),
-            (
-                f'<div class="kpi-card kpi-card-profit kpi-hero">'
-                f'<div class="kpi-card-header" style="color:#7ee787;">Total USDT Ganado</div>'
-                f'<div class="kpi-card-val" style="color:#3fb950;">{sign_tot}{total_ganado_semana:,.2f} <span class="kpi-unit">USDT</span></div>'
-                f'<div class="kpi-card-sub">Suma de ciclos cerrados</div>'
-                f'</div>'
-            ),
-            (
-                f'<div class="kpi-card kpi-card-sell">'
-                f'<div class="kpi-card-header" style="color:#79c0ff;">Pago Operador (80%)</div>'
-                f'<div class="kpi-card-val" style="color:#58a6ff;">{pago_operador_80:,.2f} <span class="kpi-unit">USDT</span></div>'
-                f'<div class="kpi-card-sub">80% de comisión generada</div>'
-                f'</div>'
-            ),
-            (
-                f'<div class="kpi-card kpi-card-buy">'
-                f'<div class="kpi-card-header" style="color:#e3b341;">Fondo Respaldo (20%)</div>'
-                f'<div class="kpi-card-val" style="color:#e3b341;">{fondo_seguro_20:,.2f} <span class="kpi-unit">USDT</span></div>'
-                f'<div class="kpi-card-sub">Seguro contra pérdidas</div>'
-                f'</div>'
-            ),
-        ]
+    grid_kpis_html = f'<div class="kpis-grid-container">{"".join(kpis_html)}</div>'
+    st.markdown(grid_kpis_html, unsafe_allow_html=True)
 
-        grid_kpis_html = f'<div class="kpis-grid-container">{"".join(kpis_html)}</div>'
-        st.markdown(grid_kpis_html, unsafe_allow_html=True)
+    st.divider()
 
-        st.divider()
+    st.write("#### 📅 Resumen Diario de Rendimiento")
 
-        st.write("#### 📅 Resumen Diario de Rendimiento")
-        df_hist["DT_Parsed"] = pd.to_datetime(df_hist["Fecha_Hora"], dayfirst=True, errors="coerce")
-        nombres_dias = {0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"}
-        df_hist["Dia_Semana"] = df_hist["DT_Parsed"].dt.dayofweek.map(nombres_dias)
+    filtro_dia = st.session_state.get("filtro_dia_semana", None)
 
-        filtro_dia = st.session_state.get("filtro_dia_semana", None)
+    dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+    if not df_hist.empty and (df_hist["Dia_Semana"] == "Domingo").any() and "Domingo" not in dias_orden:
+        dias_orden.append("Domingo")
 
-        dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
-        if (df_hist["Dia_Semana"] == "Domingo").any() and "Domingo" not in dias_orden:
-            dias_orden.append("Domingo")
+    cards_html = []
+    for dia in dias_orden:
+        sub_dia = df_hist[df_hist["Dia_Semana"] == dia] if not df_hist.empty else pd.DataFrame()
+        ganado_dia = sub_dia["USDT_Ganado"].sum() if not sub_dia.empty else 0.0
+        ciclos_dia = len(sub_dia)
+        has_profit = ganado_dia > 0
+        is_selected = (dia == filtro_dia)
 
-        cards_html = []
-        for dia in dias_orden:
-            sub_dia = df_hist[df_hist["Dia_Semana"] == dia]
-            ganado_dia = sub_dia["USDT_Ganado"].sum() if not sub_dia.empty else 0.0
-            ciclos_dia = len(sub_dia)
-            has_profit = ganado_dia > 0
-            is_selected = (dia == filtro_dia)
+        cls_parts = ["metric-day-card"]
+        if has_profit:
+            cls_parts.append("has-profit")
+        if is_selected:
+            cls_parts.append("is-selected")
+        cls_card = " ".join(cls_parts)
 
-            cls_parts = ["metric-day-card"]
-            if has_profit:
-                cls_parts.append("has-profit")
-            if is_selected:
-                cls_parts.append("is-selected")
-            cls_card = " ".join(cls_parts)
+        color_val = "#3fb950" if has_profit else "#f0f6fc"
+        prefix = "+" if has_profit else ""
+        badge_ciclos = f"{ciclos_dia} ciclos" if ciclos_dia != 1 else "1 ciclo"
 
-            color_val = "#3fb950" if has_profit else "#f0f6fc"
-            prefix = "+" if has_profit else ""
-            badge_ciclos = f"{ciclos_dia} ciclos" if ciclos_dia != 1 else "1 ciclo"
+        cards_html.append(
+            f'<div class="{cls_card}" data-dia="{dia}">'
+            f'<div class="metric-day-header">{dia}</div>'
+            f'<div class="metric-day-val" style="color:{color_val};">{prefix}{ganado_dia:,.2f}</div>'
+            f'<div class="metric-day-sub">{badge_ciclos}</div>'
+            f'</div>'
+        )
 
-            cards_html.append(
-                f'<div class="{cls_card}" data-dia="{dia}">'
-                f'<div class="metric-day-header">{dia}</div>'
-                f'<div class="metric-day-val" style="color:{color_val};">{prefix}{ganado_dia:,.2f}</div>'
-                f'<div class="metric-day-sub">{badge_ciclos}</div>'
-                f'</div>'
-            )
+    grid_html = f'<div class="days-grid-container">{"".join(cards_html)}</div>'
+    st.markdown(grid_html, unsafe_allow_html=True)
 
-        grid_html = f'<div class="days-grid-container">{"".join(cards_html)}</div>'
-        st.markdown(grid_html, unsafe_allow_html=True)
+    # Botones técnicos de filtro activados mediante clic táctil en las tarjetas
+    for d in dias_orden:
+        if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}"):
+            if st.session_state.get("filtro_dia_semana") == d:
+                st.session_state["filtro_dia_semana"] = None
+            else:
+                st.session_state["filtro_dia_semana"] = d
+            st.rerun()
 
-        # Botones técnicos de filtro activados mediante clic táctil en las tarjetas
-        for d in dias_orden:
-            if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}"):
-                if st.session_state.get("filtro_dia_semana") == d:
-                    st.session_state["filtro_dia_semana"] = None
-                else:
-                    st.session_state["filtro_dia_semana"] = d
-                st.rerun()
+    st.divider()
 
-        st.divider()
+    st.write("#### 📑 Histórico de Ciclos Registrados")
 
-        st.write("#### 📑 Histórico de Ciclos Registrados")
-
+    if df_hist.empty:
+        st.info(f"ℹ️ Aún no tienes ciclos registrados para {semanas_dict.get(semana_sel_key, 'esta semana')}.")
+    else:
         df_cards = df_hist.sort_values("Ciclo", ascending=False)
         if filtro_dia:
             df_cards = df_cards[df_cards["Dia_Semana"] == filtro_dia]
@@ -235,6 +251,7 @@ def render_vista():
 
             if df_cards.empty:
                 st.info(f"ℹ️ No se registraron ciclos el día {filtro_dia}. Haz clic en 'Ver todos los días ✕' o presiona otro día.")
+
         for _, r in df_cards.iterrows():
             c_num = int(r["Ciclo"])
             f_h = str(r["Fecha_Hora"])
@@ -296,10 +313,3 @@ def render_vista():
                 with col_aj2:
                     if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
                         editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
-
-        col_clr1, col_clr2 = st.columns([3, 1])
-        with col_clr2:
-            if st.button("🗑️ Reiniciar Semana", type="secondary", use_container_width=True):
-                confirmar_reinicio_dialog()
-    else:
-        st.info("Aún no tienes ciclos registrados en esta semana.")
