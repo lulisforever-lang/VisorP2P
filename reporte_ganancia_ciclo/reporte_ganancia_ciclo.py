@@ -25,31 +25,83 @@ def convertir_a_datetime(fecha, hora_str, minuto_str, periodo):
         h = 0
     return datetime(fecha.year, fecha.month, fecha.day, h, m)
 
+def get_binance_server_time():
+    for base in ["https://api.binance.com", "https://api1.binance.com", "https://api3.binance.com"]:
+        try:
+            r = requests.get(f"{base}/api/v3/time", timeout=4).json()
+            if "serverTime" in r:
+                return int(r["serverTime"])
+        except Exception:
+            continue
+    return int(time.time() * 1000)
+
 def fetch_orders(api_key, api_secret, start_ms, end_ms):
-    base_url = "https://api.binance.com"
-    endpoint = "/sapi/v1/c2c/orderMatch/listUserOrderHistory"
     todas = []
+    error_msg = None
+
+    local_ms = int(time.time() * 1000)
+    server_ms = get_binance_server_time()
+    offset_ms = server_ms - local_ms
+
     for t_type in ["BUY", "SELL"]:
         page = 1
         while True:
+            current_ts = int(time.time() * 1000) + offset_ms
             params = {
-                "tradeType": t_type, "startTimestamp": start_ms, "endTimestamp": end_ms,
-                "page": page, "rows": 50, "timestamp": int(time.time() * 1000)
+                "tradeType": t_type,
+                "startTimestamp": start_ms,
+                "endTimestamp": end_ms,
+                "page": page,
+                "rows": 50,
+                "timestamp": current_ts,
+                "recvWindow": 60000
             }
             query_string = "&".join([f"{k}={v}" for k, v in sorted(params.items())])
             sig = hmac.new(api_secret.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).hexdigest()
-            url = f"{base_url}{endpoint}?{query_string}&signature={sig}"
-            try:
-                res = requests.get(url, headers={"X-MBX-APIKEY": api_key}, timeout=15).json()
-            except Exception:
+            
+            resp_json = None
+            last_err = None
+            for base_url in ["https://api.binance.com", "https://api1.binance.com", "https://api3.binance.com"]:
+                url = f"{base_url}/sapi/v1/c2c/orderMatch/listUserOrderHistory?{query_string}&signature={sig}"
+                try:
+                    r = requests.get(url, headers={"X-MBX-APIKEY": api_key}, timeout=15)
+                    if r.status_code == 200:
+                        try:
+                            resp_json = r.json()
+                            break
+                        except Exception as e:
+                            last_err = f"Error decodificando JSON: {str(e)}"
+                    else:
+                        try:
+                            err_body = r.json()
+                            last_err = f"HTTP {r.status_code}: [{err_body.get('code')}] {err_body.get('msg', r.text[:200])}"
+                        except Exception:
+                            last_err = f"HTTP {r.status_code}: {r.text[:200]}"
+                except Exception as e:
+                    last_err = f"Fallo de conexión ({base_url}): {str(e)}"
+                    continue
+
+            if not resp_json:
+                if not error_msg:
+                    error_msg = last_err or "No se pudo conectar a los servidores de Binance."
                 break
-            if res.get("code") != "000000" or "data" not in res or not res["data"]:
+
+            code = resp_json.get("code")
+            if code != "000000":
+                msg = resp_json.get("msg") or resp_json.get("message") or str(resp_json)
+                error_msg = f"[{code}] {msg}"
                 break
-            todas.extend(res["data"])
+
+            data = resp_json.get("data", [])
+            if not data:
+                break
+
+            todas.extend(data)
             page += 1
             if page > 40:
                 break
-    return todas
+
+    return todas, error_msg
 
 def procesar_ordenes(orders, start_dt, end_dt, redondear, incluir_pagadas):
     if not orders:
@@ -113,16 +165,22 @@ def render_vista(api_key, api_secret):
 
     if st.button("Generar Reporte", type="primary", use_container_width=True):
         if not api_key or not api_secret:
-            st.error("Configura tus API Keys en el archivo .env.")
+            st.error("⚠️ No se encontraron las credenciales de Binance (BINANCE_API_KEY / BINANCE_API_SECRET) en Secrets ni en .env.")
         elif dt_inicio >= dt_fin:
             st.error("La fecha de inicio debe ser anterior a la de fin.")
         else:
             ts_start = int((dt_inicio - timedelta(days=2)).timestamp() * 1000)
             ts_end = int((dt_fin + timedelta(days=1)).timestamp() * 1000)
             with st.spinner("Conciliando ciclo..."):
-                raw = fetch_orders(api_key, api_secret, ts_start, ts_end)
-                bb, bs = procesar_ordenes(raw, dt_inicio, dt_fin, st.session_state["cfg_redondear_pagos"], st.session_state["cfg_incluir_pagadas"])
+                raw, err_api = fetch_orders(api_key, api_secret, ts_start, ts_end)
+                if err_api:
+                    st.error(f"⚠️ Error devuelto por Binance: {err_api}")
+                    if "-1003" in str(err_api) or "restricted location" in str(err_api).lower() or "451" in str(err_api):
+                        st.warning("🚨 **Bloqueo Geográfico de Binance:** Binance.com bloquea automáticamente los servidores ubicados en EE.UU. (como Streamlit Community Cloud en AWS Virginia).")
                 mb, ms = get_manual("BUY", dt_inicio, dt_fin), get_manual("SELL", dt_inicio, dt_fin)
+                if not raw and mb.empty and ms.empty and not err_api:
+                    st.info("ℹ️ Conexión exitosa, pero no se encontraron órdenes en Binance ni operaciones manuales en este rango de fechas y horas.")
+                bb, bs = procesar_ordenes(raw, dt_inicio, dt_fin, st.session_state["cfg_redondear_pagos"], st.session_state["cfg_incluir_pagadas"])
                 df_b, df_s = pd.concat([bb, mb], ignore_index=True), pd.concat([bs, ms], ignore_index=True)
 
                 com_v = df_s["commission"].sum() if not df_s.empty else 0.0
