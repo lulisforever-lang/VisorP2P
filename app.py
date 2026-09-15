@@ -99,6 +99,27 @@ def desactivar_teclado_virtual():
                         span.setAttribute('contenteditable', 'false');
                     }
                 });
+
+                // 3. Ocultar de forma segura únicamente los botones técnicos de filtro (Filtro_Lunes, etc.)
+                const allBtns = pDoc.querySelectorAll('button');
+                allBtns.forEach(btn => {
+                    const txt = (btn.innerText || '').trim();
+                    if (txt.startsWith('Filtro_')) {
+                        const elContainer = btn.closest('div[data-testid="stElementContainer"]') || btn.parentElement;
+                        if (elContainer && elContainer.style.position !== 'absolute') {
+                            elContainer.style.position = 'absolute';
+                            elContainer.style.width = '0px';
+                            elContainer.style.height = '0px';
+                            elContainer.style.minHeight = '0px';
+                            elContainer.style.opacity = '0';
+                            elContainer.style.pointerEvents = 'none';
+                            elContainer.style.overflow = 'hidden';
+                            elContainer.style.margin = '0px';
+                            elContainer.style.padding = '0px';
+                            elContainer.style.border = 'none';
+                        }
+                    }
+                });
             } catch(e) {}
         }
 

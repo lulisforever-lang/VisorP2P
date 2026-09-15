@@ -171,21 +171,7 @@ div[data-testid="stCustomComponentV1"] {
     border: none !important;
 }
 
-/* Ocultar contenedor y botones técnicos de filtrado diario */
-div[data-testid="stVerticalBlock"]:has(.hidden-filter-day-marker),
-div[data-testid="stElementContainer"]:has(.hidden-filter-day-marker) {
-    position: absolute !important;
-    width: 0 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    max-height: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    border: none !important;
-}
+
 
 /* Ajustes para pantallas medianas y tablets (<= 768px) */
 @media (max-width: 768px) {

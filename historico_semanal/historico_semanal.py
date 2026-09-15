@@ -200,15 +200,13 @@ def render_vista():
         st.markdown(grid_html, unsafe_allow_html=True)
 
         # Botones técnicos de filtro activados mediante clic táctil en las tarjetas
-        with st.container():
-            st.markdown('<div class="hidden-filter-day-marker"></div>', unsafe_allow_html=True)
-            for d in dias_orden:
-                if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}", help=f"filter_day_{d}"):
-                    if st.session_state.get("filtro_dia_semana") == d:
-                        st.session_state["filtro_dia_semana"] = None
-                    else:
-                        st.session_state["filtro_dia_semana"] = d
-                    st.rerun()
+        for d in dias_orden:
+            if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}"):
+                if st.session_state.get("filtro_dia_semana") == d:
+                    st.session_state["filtro_dia_semana"] = None
+                else:
+                    st.session_state["filtro_dia_semana"] = d
+                st.rerun()
 
         st.divider()
 
