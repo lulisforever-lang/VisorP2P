@@ -136,7 +136,7 @@ def render_vista():
             f'<div class="kpi-card">'
             f'<div class="kpi-card-header">Meta Semanal</div>'
             f'<div class="kpi-card-val">{meta_semanal:,.2f} <span class="kpi-unit">USDT</span></div>'
-            f'<div class="kpi-card-sub">Objetivo Lunes a Viernes</div>'
+            f'<div class="kpi-card-sub">Objetivo Lunes a Domingo</div>'
             f'</div>'
         ),
         (
@@ -178,9 +178,7 @@ def render_vista():
 
     filtro_dia = st.session_state.get("filtro_dia_semana", None)
 
-    dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
-    if not df_hist.empty and (df_hist["Dia_Semana"] == "Domingo").any() and "Domingo" not in dias_orden:
-        dias_orden.append("Domingo")
+    dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
 
     cards_html = []
     for dia in dias_orden:

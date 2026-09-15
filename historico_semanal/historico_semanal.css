@@ -110,8 +110,8 @@
    ========================================================================== */
 .days-grid-container {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
     margin-top: 8px;
     margin-bottom: 22px;
     width: 100%;
@@ -287,16 +287,16 @@
     }
 }
 
-/* Responsividad para los 6 días de la semana */
-@media (max-width: 992px) {
+/* Responsividad para los 7 días de la semana */
+@media (max-width: 1100px) {
     .days-grid-container {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
         row-gap: 14px;
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
     .days-grid-container {
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
@@ -309,6 +309,9 @@
     .metric-day-val {
         font-size: 1.25rem;
     }
+    .metric-day-card:last-child {
+        grid-column: span 2;
+    }
 }
 
 @media (max-width: 340px) {
@@ -316,6 +319,9 @@
         grid-template-columns: 1fr;
         gap: 10px;
         row-gap: 10px;
+    }
+    .metric-day-card:last-child {
+        grid-column: span 1;
     }
 }
 
