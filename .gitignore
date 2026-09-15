@@ -1,0 +1,24 @@
+# Claves privadas y variables de entorno
+.env
+*.env
+.streamlit/secrets.toml
+
+# Python bytecode y caché
+__pycache__/
+*.py[cod]
+*.class
+
+# Archivos temporales y de pruebas
+scratch/
+*.log
+*.json
+dump.html
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Binarios y ejecutables
+bin/
+*.exe

@@ -1,0 +1,396 @@
+.comision-info-pill {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    color: #8b949e;
+    line-height: 1.4;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   GRILLA DE KPIS PRINCIPALES (SEMANA)
+   ========================================================================== */
+.kpis-grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 10px;
+    margin-bottom: 22px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.kpi-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 88px;
+}
+
+.kpi-card:hover {
+    border-color: #58a6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.kpi-card-profit {
+    background: linear-gradient(145deg, #132418 0%, #161b22 100%);
+    border: 1px solid rgba(63, 185, 80, 0.5);
+    box-shadow: 0 4px 12px rgba(63, 185, 80, 0.15);
+}
+
+.kpi-card-sell {
+    background: linear-gradient(145deg, #132230 0%, #161b22 100%);
+    border: 1px solid rgba(56, 139, 253, 0.45);
+    box-shadow: 0 4px 12px rgba(56, 139, 253, 0.12);
+}
+
+.kpi-card-buy {
+    background: linear-gradient(145deg, #271f16 0%, #161b22 100%);
+    border: 1px solid rgba(210, 153, 34, 0.45);
+    box-shadow: 0 4px 12px rgba(210, 153, 34, 0.12);
+}
+
+.kpi-card-restante {
+    border: 1px solid rgba(248, 81, 73, 0.35);
+}
+
+.kpi-card-header {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8b949e;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.kpi-card-val {
+    font-size: 1.18rem;
+    font-weight: 700;
+    color: #f0f6fc;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+.kpi-unit {
+    font-size: 0.80rem;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+.kpi-card-sub {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #8b949e;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+/* ==========================================================================
+   GRILLA DE DÍAS DE RENDIMIENTO
+   ========================================================================== */
+.days-grid-container {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 22px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.metric-day-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.metric-day-card:hover {
+    border-color: #58a6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.metric-day-card.has-profit {
+    border: 1px solid rgba(63, 185, 80, 0.5);
+    background: linear-gradient(145deg, #132418 0%, #161b22 100%);
+    box-shadow: 0 4px 12px rgba(63, 185, 80, 0.15);
+}
+
+.metric-day-header {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8b949e;
+    margin-bottom: 6px;
+}
+
+.metric-day-card.has-profit .metric-day-header {
+    color: #7ee787;
+}
+
+.metric-day-val {
+    font-size: 1.18rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+
+.metric-day-sub {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: #8b949e;
+}
+.metric-label {
+    font-size: clamp(0.70rem, 1.1vw, 0.78rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8b949e;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.metric-value {
+    font-size: clamp(0.95rem, 1.25vw, 1.32rem);
+    font-weight: 700;
+    color: #f0f6fc;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.metric-sub {
+    font-size: clamp(0.70rem, 1.8vw, 0.80rem);
+    margin-top: 6px;
+    color: #8b949e;
+    word-break: break-word;
+}
+
+/* Responsividad para los 5 KPIs superiores */
+@media (max-width: 992px) {
+    .kpis-grid-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        row-gap: 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    .kpis-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        row-gap: 12px;
+        margin-bottom: 20px;
+    }
+    .kpi-card {
+        padding: 13px 8px;
+        min-height: 86px;
+    }
+    .kpi-card.kpi-hero {
+        grid-column: span 2;
+        padding: 14px 10px;
+    }
+    .kpi-card.kpi-hero .kpi-card-val {
+        font-size: 1.35rem;
+    }
+}
+
+@media (max-width: 340px) {
+    .kpis-grid-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        row-gap: 10px;
+    }
+    .kpi-card.kpi-hero {
+        grid-column: span 1;
+    }
+}
+
+/* Responsividad para los 6 días de la semana */
+@media (max-width: 992px) {
+    .days-grid-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        row-gap: 14px;
+    }
+}
+
+@media (max-width: 640px) {
+    .days-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        row-gap: 12px;
+        margin-bottom: 20px;
+    }
+    .metric-day-card {
+        padding: 14px 10px;
+    }
+    .metric-day-val {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 340px) {
+    .days-grid-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        row-gap: 10px;
+    }
+}
+
+/* ==========================================================================
+   TARJETAS RESPONSIVAS DE HISTÓRICO DE CICLOS (VISTA MÓVIL)
+   ========================================================================== */
+.cycle-card-item {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.cycle-card-item.pos {
+    border-left: 5px solid #3fb950;
+}
+
+.cycle-card-item.neg {
+    border-left: 5px solid #f85149;
+}
+
+.cycle-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.cycle-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #f0f6fc;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.03em;
+}
+
+.cycle-profit-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.cycle-profit-text.pos {
+    color: #3fb950;
+}
+
+.cycle-profit-text.neg {
+    color: #f85149;
+}
+
+.cycle-mid-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #8b949e;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #21262d;
+    padding-bottom: 8px;
+}
+
+.cycle-pct-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.cycle-pct-badge.pos {
+    background-color: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+}
+
+.cycle-pct-badge.neg {
+    background-color: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+}
+
+.cycle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+}
+
+@media (min-width: 768px) {
+    .cycle-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.cycle-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cycle-cell-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8b949e;
+    margin-bottom: 2px;
+}
+
+.cycle-cell-value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e6edf3;
+    white-space: nowrap;
+}
+
+.cycle-ajuste-pill {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px dashed #30363d;
+    font-size: 0.75rem;
+    color: #d29922;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

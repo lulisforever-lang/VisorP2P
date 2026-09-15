@@ -1,0 +1,27 @@
+.ajustes-container {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 10px;
+}
+
+/* Tarjetas de configuración táctiles para checkboxes */
+div[data-testid="stCheckbox"] {
+    background: #161b22;
+    border: 1px solid #2d333b;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+div[data-testid="stCheckbox"]:hover {
+    border-color: #388bfd;
+    background: #1a222d;
+}
+
+div[data-testid="stCheckbox"] label {
+    font-size: 0.95rem;
+    cursor: pointer;
+}

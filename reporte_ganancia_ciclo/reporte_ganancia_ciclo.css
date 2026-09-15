@@ -1,0 +1,117 @@
+.metric-card {
+    background-color: #1a1e24;
+    border: 1px solid #2d333b;
+    border-radius: 12px;
+    padding: clamp(12px, 3vw, 16px) clamp(14px, 3.5vw, 20px);
+    margin-bottom: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+}
+.metric-card-sell {
+    background: linear-gradient(145deg, #132230 0%, #1a1e24 100%);
+    border: 1px solid #388bfd;
+}
+.metric-card-buy {
+    background: linear-gradient(145deg, #271f16 0%, #1a1e24 100%);
+    border: 1px solid #d29922;
+}
+.metric-card-profit {
+    background: linear-gradient(145deg, #13231b 0%, #1a1e24 100%);
+    border: 1px solid #238636;
+}
+.metric-label {
+    font-size: clamp(0.72rem, 2vw, 0.82rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8b949e;
+    margin-bottom: 6px;
+}
+.metric-value {
+    font-size: clamp(1.2rem, 4vw, 1.55rem);
+    font-weight: 700;
+    color: #f0f6fc;
+    line-height: 1.2;
+    word-break: break-word;
+}
+.metric-sub {
+    font-size: clamp(0.72rem, 1.8vw, 0.80rem);
+    margin-top: 6px;
+    color: #8b949e;
+}
+.badge-pill-neg {
+    display: inline-block;
+    background-color: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+.badge-pill-pos {
+    display: inline-block;
+    background-color: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Responsividad en tablet (<= 992px) */
+@media (max-width: 992px) {
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) > .stColumn {
+        min-width: calc(50% - 10px) !important;
+        flex: 1 1 calc(50% - 10px) !important;
+    }
+}
+
+/* Responsividad en smartphones (<= 640px) */
+@media (max-width: 640px) {
+    /* Las 3 tarjetas principales (Venta, Compra, Ganancia) a ancho completo */
+    div[data-testid="stHorizontalBlock"]:has(.metric-card-sell, .metric-card-buy, .metric-card-profit) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card-sell, .metric-card-buy, .metric-card-profit) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card-sell, .metric-card-buy, .metric-card-profit) > .stColumn {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Las 4 tarjetas de métricas secundarias en cuadrícula de 2 columnas */
+    div[data-testid="stHorizontalBlock"]:has(.metric-card:not(.metric-card-sell):not(.metric-card-buy):not(.metric-card-profit)) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card:not(.metric-card-sell):not(.metric-card-buy):not(.metric-card-profit)) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card:not(.metric-card-sell):not(.metric-card-buy):not(.metric-card-profit)) > .stColumn {
+        min-width: calc(50% - 6px) !important;
+        flex: 1 1 calc(50% - 6px) !important;
+    }
+
+    /* Bloque de ajuste de ciclo a ancho completo y botón grande */
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stNumberInput"]):has(button) {
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stNumberInput"]):has(button) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stNumberInput"]):has(button) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stNumberInput"]):has(button) > .stColumn {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+}
+
+/* Pantallas muy pequeñas (<= 380px) */
+@media (max-width: 380px) {
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:has(.metric-card) > .stColumn {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+}

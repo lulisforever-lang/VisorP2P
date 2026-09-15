@@ -1,0 +1,267 @@
+/* ==========================================================================
+   PANTALLA DE ACCESO PROTEGIDO (PIN LOCK SCREEN) - ARMONÍA CON APP WEB
+   ========================================================================== */
+
+/* Centrado global cuando la app está bloqueada (sin sidebar activo) */
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh !important;
+    background-color: #0e1117 !important;
+    background-image: none !important;
+}
+
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) section.main,
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) [data-testid="stMain"] {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: #0e1117 !important;
+}
+
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) div[data-testid="stMainBlockContainer"],
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) div[data-testid="stAppViewBlockContainer"],
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) .main .block-container {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 1.5rem 1rem !important;
+    width: 100% !important;
+    max-width: 440px !important;
+    box-sizing: border-box !important;
+}
+
+/* Ocultar barra superior en pantalla de bloqueo para un aspecto limpio */
+[data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) header[data-testid="stHeader"],
+body:not(:has(section[data-testid="stSidebar"])) header[data-testid="stHeader"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+}
+
+/* ==========================================================================
+   TARJETA PRINCIPAL DE LOGIN (ESTILO #161b22, BORDE #30363d, RADIO 12px)
+   ========================================================================== */
+div[data-testid="stForm"]:has(input[type="password"]) {
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 12px !important;
+    padding: 24px 20px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]):hover {
+    border-color: #58a6ff !important;
+}
+
+/* ==========================================================================
+   CABECERA Y MARCA
+   ========================================================================== */
+.login-header-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.login-brand-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f0f6fc;
+    margin-bottom: 6px;
+    line-height: 1.2;
+}
+
+.login-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+}
+
+.login-lock-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin-bottom: 4px;
+}
+
+.login-subtext {
+    font-size: 0.84rem;
+    color: #8b949e;
+    line-height: 1.4;
+    margin: 0;
+    max-width: 320px;
+}
+
+/* ==========================================================================
+   CAMPO INPUT DEL PIN
+   ========================================================================== */
+.login-input-label {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin-bottom: 6px;
+    text-align: left;
+    width: 100%;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] {
+    width: 100% !important;
+    margin-bottom: 14px !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input {
+    background-color: #0e1117 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    color: #f0f6fc !important;
+    font-size: 1.2rem !important;
+    letter-spacing: 0.25em !important;
+    text-align: center !important;
+    height: 46px !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input::placeholder {
+    letter-spacing: 0.12em !important;
+    color: #484f58 !important;
+    font-size: 1.02rem !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input:focus {
+    border-color: #58a6ff !important;
+    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.25) !important;
+    outline: none !important;
+}
+
+/* ==========================================================================
+   BOTÓN DE DESBLOQUEO (CORAL-ROJO STREAMLIT / PRIMARIO DE LA APP)
+   ========================================================================== */
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stFormSubmitButton"] {
+    width: 100% !important;
+    margin-top: 4px !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stFormSubmitButton"] button {
+    background: #ff4b4b !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    height: 46px !important;
+    font-size: 0.98rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    box-shadow: 0 2px 8px rgba(255, 75, 75, 0.3) !important;
+    transition: background 0.15s ease, transform 0.1s ease !important;
+    width: 100% !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stFormSubmitButton"] button:hover {
+    background: #e53e3e !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 75, 75, 0.4) !important;
+}
+
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stFormSubmitButton"] button:active {
+    transform: translateY(0) !important;
+    background: #c53030 !important;
+}
+
+/* ==========================================================================
+   FOOTER DE SEGURIDAD (ESTILO PILL DISCRETO)
+   ========================================================================== */
+.login-footer-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #0e1117;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.74rem;
+    color: #8b949e;
+    margin-top: 16px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   ALERTAS
+   ========================================================================== */
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stAlert"] {
+    border-radius: 8px !important;
+    margin-top: 12px !important;
+}
+
+/* ==========================================================================
+   RESPONSIVIDAD MÓVIL (<= 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+    [data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) div[data-testid="stMainBlockContainer"],
+    [data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) div[data-testid="stAppViewBlockContainer"],
+    [data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) .main .block-container {
+        padding: 1rem 0.75rem !important;
+        width: 100% !important;
+    }
+
+    div[data-testid="stForm"]:has(input[type="password"]) {
+        padding: 20px 16px !important;
+        border-radius: 12px !important;
+        margin: 0 auto !important;
+        max-width: 100% !important;
+    }
+
+    .login-brand-title {
+        font-size: 1.25rem !important;
+    }
+
+    .login-subtext {
+        font-size: 0.8rem;
+    }
+
+    div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input {
+        height: 44px !important;
+        font-size: 1.15rem !important;
+    }
+
+    div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stFormSubmitButton"] button {
+        height: 44px !important;
+        font-size: 0.96rem !important;
+    }
+}

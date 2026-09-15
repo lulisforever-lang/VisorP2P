@@ -1,0 +1,171 @@
+.manual-box {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 20px;
+}
+
+/* Formulario responsivo en móviles (<= 768px) */
+@media (max-width: 768px) {
+    /* Las 2 columnas principales del formulario pasan a 100% de ancho cada una */
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(2):last-child) {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 0px !important;
+    }
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(2):last-child) > [data-testid="stColumn"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(2):last-child) > [data-testid="column"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> .stColumn:nth-child(2):last-child) > .stColumn {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Asegurar que todos los inputs del formulario utilicen el 100% del ancho disponible */
+    div[data-testid="stForm"] div[data-testid="stNumberInput"],
+    div[data-testid="stForm"] div[data-testid="stTextInput"],
+    div[data-testid="stForm"] div[data-testid="stSelectbox"],
+    div[data-testid="stForm"] div[data-testid="stDateInput"] {
+        width: 100% !important;
+    }
+    div[data-testid="stForm"] div[data-testid="stNumberInputContainer"],
+    div[data-testid="stForm"] div[data-testid="stNumberInputField"],
+    div[data-testid="stForm"] div[data-testid="stTextInput"] input {
+        width: 100% !important;
+    }
+
+    /* Conservar Hora, Minuto y Periodo en una sola fila compacta de 3 columnas */
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(3):last-child) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        width: 100% !important;
+        margin-bottom: 6px !important;
+    }
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(3):last-child) > [data-testid="stColumn"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(3):last-child) > [data-testid="column"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> .stColumn:nth-child(3):last-child) > .stColumn {
+        width: calc((100% - 12px) / 3) !important;
+        min-width: calc((100% - 12px) / 3) !important;
+        max-width: calc((100% - 12px) / 3) !important;
+        flex: 1 1 calc((100% - 12px) / 3) !important;
+    }
+}
+
+/* ==========================================================================
+   TARJETAS RESPONSIVAS DE OPERACIONES EXTERNAS
+   ========================================================================== */
+.cycle-card-item {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.cycle-card-item:hover {
+    border-color: #58a6ff;
+}
+
+.cycle-card-item.sell {
+    border-left: 5px solid #388bfd;
+}
+
+.cycle-card-item.buy {
+    border-left: 5px solid #3fb950;
+}
+
+.cycle-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.cycle-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #21262d;
+    border: 1px solid #30363d;
+    color: #f0f6fc;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.03em;
+}
+
+.cycle-profit-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.cycle-mid-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+    color: #8b949e;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #21262d;
+    padding-bottom: 8px;
+}
+
+.cycle-pct-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.cycle-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 12px;
+}
+
+@media (min-width: 768px) {
+    .cycle-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.cycle-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cycle-cell-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8b949e;
+    margin-bottom: 2px;
+}
+
+.cycle-cell-value {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e6edf3;
+    white-space: nowrap;
+}
+
+.cycle-ajuste-pill {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px dashed #30363d;
+    font-size: 0.75rem;
+    color: #d29922;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

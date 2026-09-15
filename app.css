@@ -1,0 +1,377 @@
+/* ==========================================================================
+   1. ESTADO EXPANDIDO (SIDEBAR ABIERTO)
+   ========================================================================== */
+section[data-testid="stSidebar"] {
+    transition: min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+section[data-testid="stSidebar"] > div:first-child {
+    padding-top: 1.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+/* Botones: texto a la izquierda e icono a la derecha */
+section[data-testid="stSidebar"] div[data-testid="stButton"] button {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 10px 16px !important;
+    border-radius: 8px !important;
+    font-size: 0.92rem !important;
+    font-weight: 500 !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stButton"] button p {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+/* ==========================================================================
+   2. ESTADO COLAPSADO (MINI-RAIL VERTICAL)
+   ========================================================================== */
+section[data-testid="stSidebar"][aria-expanded="false"] {
+    min-width: 68px !important;
+    max-width: 68px !important;
+    width: 68px !important;
+    transform: translateX(0) !important;
+    margin-left: 0 !important;
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    z-index: 100 !important;
+    overflow: hidden !important;
+}
+
+/* Reset de paddings y centrado en los contenedores internos del sidebar */
+section[data-testid="stSidebar"][aria-expanded="false"] > div:first-child,
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stSidebarUserContent"],
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stSidebarContent"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 68px !important;
+    max-width: 68px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Ocultar títulos y textos generales */
+section[data-testid="stSidebar"][aria-expanded="false"] h1,
+section[data-testid="stSidebar"][aria-expanded="false"] h2,
+section[data-testid="stSidebar"][aria-expanded="false"] h3,
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stMarkdownContainer"] p {
+    display: none !important;
+}
+
+/* Centrar horizontalmente cada contenedor de botón */
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 0 8px 0 !important;
+    padding: 0 !important;
+}
+
+/* Estilo y dimensiones cuadradas simétricas del botón (46x46 dentro de 68px -> 11px a cada lado) */
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] button {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    max-width: 46px !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    line-height: 1 !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+}
+
+/* Ocultar absolutamente todos los elementos hijos del botón para que no ocupen ancho residual */
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] button > * {
+    display: none !important;
+}
+
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] button::after {
+    display: none !important;
+}
+
+/* Estructura común para centrar perfectamente el icono pseudo-element */
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] button::before {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    line-height: 1 !important;
+    font-size: 1.35rem !important;
+    text-align: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Iconos específicos por botón */
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(3) button::before { content: "⚡"; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(4) button::before { content: "📊"; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(5) button::before { content: "➕"; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(6) button::before { content: "⚙️"; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(8) button::before { content: "🔒"; }
+
+/* Botón de expandir flechas */
+div[data-testid="collapsedControl"] {
+    left: 14px !important;
+    top: 12px !important;
+    z-index: 999999 !important;
+}
+
+/* ==========================================================================
+   3. DISEÑO RESPONSIVO (MÓVILES Y TABLETS)
+   ========================================================================== */
+
+/* Ocultar botón de deploy de desarrollo en toda la aplicación */
+.stDeployButton {
+    display: none !important;
+}
+
+/* Ajustes para pantallas medianas y tablets (<= 768px) */
+@media (max-width: 768px) {
+    /* Desplazar el contenido principal ÚNICAMENTE cuando el riel lateral (sidebar) está presente */
+    [data-testid="stAppViewContainer"]:has(section[data-testid="stSidebar"]) section.main,
+    [data-testid="stAppViewContainer"]:has(section[data-testid="stSidebar"]) [data-testid="stMain"],
+    [data-testid="stAppViewContainer"]:has(section[data-testid="stSidebar"]) > section:nth-child(2) {
+        margin-left: 56px !important;
+        width: calc(100vw - 56px) !important;
+        max-width: calc(100vw - 56px) !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Cabecera de Streamlit cuando hay sidebar */
+    [data-testid="stAppViewContainer"]:has(section[data-testid="stSidebar"]) header[data-testid="stHeader"] {
+        left: 56px !important;
+        width: calc(100vw - 56px) !important;
+        background: transparent !important;
+    }
+
+    /* Cuando NO hay sidebar (como en la pantalla de login/bloqueo) */
+    [data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) section.main,
+    [data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) [data-testid="stMain"] {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    [data-testid="stAppViewContainer"]:not(:has(section[data-testid="stSidebar"])) header[data-testid="stHeader"] {
+        left: 0 !important;
+        width: 100% !important;
+        background: transparent !important;
+    }
+
+    div[data-testid="stMainBlockContainer"],
+    div[data-testid="stAppViewBlockContainer"],
+    .main .block-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 2.5rem !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    h1 {
+        font-size: clamp(1.25rem, 4.2vw, 1.75rem) !important;
+        word-break: break-word;
+    }
+    h2, h3 {
+        font-size: clamp(1.05rem, 3.5vw, 1.35rem) !important;
+        word-break: break-word;
+    }
+    h4 {
+        font-size: clamp(0.95rem, 3.0vw, 1.15rem) !important;
+    }
+
+    /* Columnas generales: envolver suavemente */
+    div[data-testid="stHorizontalBlock"] {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    /* Formato de selector de fecha y hora: fecha al 100% y hora/min/periodo en 3 columnas iguales */
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) > [data-testid="column"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) > .stColumn:first-child {
+        width: 100% !important;
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) > [data-testid="stColumn"]:not(:first-child),
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) > [data-testid="column"]:not(:first-child),
+    div[data-testid="stHorizontalBlock"]:has([data-testid="stDateInput"]) > .stColumn:not(:first-child) {
+        width: calc((100% - 16px) / 3) !important;
+        min-width: calc((100% - 16px) / 3) !important;
+        max-width: calc((100% - 16px) / 3) !important;
+        flex: 1 1 calc((100% - 16px) / 3) !important;
+    }
+
+    /* Tabla con desplazamiento táctil suave y ancho completo */
+    div[data-testid="stDataFrame"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Ajustes para smartphones (<= 640px) */
+@media (max-width: 640px) {
+    section[data-testid="stSidebar"][aria-expanded="false"] {
+        min-width: 56px !important;
+        max-width: 56px !important;
+        width: 56px !important;
+    }
+    section[data-testid="stSidebar"][aria-expanded="false"] > div:first-child,
+    section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stSidebarUserContent"],
+    section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stSidebarContent"] {
+        width: 56px !important;
+        max-width: 56px !important;
+    }
+    section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] button {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        max-width: 42px !important;
+    }
+    section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButton"] button::before {
+        font-size: 1.2rem !important;
+    }
+
+    div[data-testid="collapsedControl"] {
+        left: 8px !important;
+        top: 8px !important;
+    }
+
+    /* Columnas principales de formularios a ancho completo en móviles */
+    div[data-testid="stForm"] > div > div[data-testid="stHorizontalBlock"] > [data-testid="stColumn"],
+    div[data-testid="stForm"] > div > div[data-testid="stHorizontalBlock"] > [data-testid="column"],
+    div[data-testid="stForm"] > div > div[data-testid="stHorizontalBlock"] > .stColumn {
+        min-width: 100% !important;
+        width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Bloque de hora/minuto/periodo dentro de un formulario (3 columnas en 1 fila) */
+    /* Columnas principales de formulario (2 columnas) pasan a 100% en pantallas móviles */
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(2):last-child) {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 0px !important;
+    }
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(2):last-child) > [data-testid="stColumn"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(2):last-child) > [data-testid="column"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> .stColumn:nth-child(2):last-child) > .stColumn {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+
+    /* Asegurar que los contenedores de inputs dentro de stForm ocupen el 100% del ancho */
+    div[data-testid="stForm"] div[data-testid="stNumberInput"],
+    div[data-testid="stForm"] div[data-testid="stTextInput"],
+    div[data-testid="stForm"] div[data-testid="stSelectbox"],
+    div[data-testid="stForm"] div[data-testid="stDateInput"],
+    div[data-testid="stForm"] div[data-testid="stNumberInputContainer"],
+    div[data-testid="stForm"] div[data-testid="stNumberInputField"],
+    div[data-testid="stForm"] div[data-testid="stTextInput"] input {
+        width: 100% !important;
+    }
+
+    /* Bloque de hora/minuto/periodo dentro de un formulario (3 columnas en 1 fila) */
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(3):last-child),
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(3):last-child),
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> .stColumn:nth-child(3):last-child) {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"]:nth-child(3):last-child) > [data-testid="stColumn"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> [data-testid="column"]:nth-child(3):last-child) > [data-testid="column"],
+    div[data-testid="stForm"] div[data-testid="stHorizontalBlock"]:has(> .stColumn:nth-child(3):last-child) > .stColumn {
+        width: calc((100% - 12px) / 3) !important;
+        min-width: calc((100% - 12px) / 3) !important;
+        max-width: calc((100% - 12px) / 3) !important;
+        flex: 1 1 calc((100% - 12px) / 3) !important;
+    }
+
+    /* Ocultar botones de desarrollo en producción/móvil */
+    .stDeployButton,
+    div[data-testid="stDecoration"],
+    div[data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+
+    /* Botones de acción principales a ancho completo en móviles */
+    div[data-testid="stMain"] div[data-testid="stButton"] button[kind="primary"],
+    div[data-testid="stMain"] div[data-testid="stFormSubmitButton"] button {
+        width: 100% !important;
+        min-height: 46px !important;
+        font-size: 1.02rem !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+    }
+
+    /* Altura táctil cómoda para inputs y selectores en móvil */
+    div[data-testid="stSelectbox"] > div,
+    div[data-testid="stDateInput"] input,
+    div[data-testid="stNumberInput"] input,
+    div[data-testid="stTextInput"] input {
+        min-height: 42px !important;
+        font-size: 0.95rem !important;
+    }
+
+    /* Espacio inferior seguro para navegación táctil y barras de navegación del teléfono */
+    div[data-testid="stMainBlockContainer"],
+    div[data-testid="stAppViewBlockContainer"],
+    .main .block-container {
+        padding-bottom: 5rem !important;
+    }
+}
+
+/* Pantallas pequeñas (<= 480px) */
+@media (max-width: 480px) {
+    /* Excluir los bloques de tiempo (fecha/hora y 3 columnas) y tarjetas de días para que no se rompan a 100% */
+    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> [data-testid="stColumn"]:nth-child(3):last-child)):not(:has(.metric-day-card)) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> [data-testid="column"]:nth-child(3):last-child)):not(:has(.metric-day-card)) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> .stColumn:nth-child(3):last-child)):not(:has(.metric-day-card)) > .stColumn {
+        min-width: 100% !important;
+        flex: 1 1 100% !important;
+    }
+}
