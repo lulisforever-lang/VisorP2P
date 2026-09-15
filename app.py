@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from dotenv import load_dotenv
 import pandas as pd
@@ -26,6 +27,15 @@ ENV_PATH = BASE_DIR / ".env"
 
 # Cargar variables de entorno (override=True fuerza a recargar si editaste el archivo)
 load_dotenv(dotenv_path=ENV_PATH, override=True)
+
+# Configurar zona horaria del sistema en servidores Linux (ej. Render)
+try:
+    tz_env = os.getenv("APP_TIMEZONE", "America/Caracas")
+    if hasattr(time, "tzset"):
+        os.environ["TZ"] = tz_env
+        time.tzset()
+except Exception:
+    pass
 
 def get_binance_credentials():
     k = ""
@@ -66,6 +76,8 @@ if "cfg_descontar_redondeo" not in st.session_state:
     st.session_state["cfg_descontar_redondeo"] = True
 if "cfg_incluir_pagadas" not in st.session_state:
     st.session_state["cfg_incluir_pagadas"] = True
+if "cfg_timezone" not in st.session_state:
+    st.session_state["cfg_timezone"] = os.getenv("APP_TIMEZONE", "America/Caracas")
 
 # Estado de la vista activa
 if "vista_actual" not in st.session_state:

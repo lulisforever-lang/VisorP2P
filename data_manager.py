@@ -1,6 +1,29 @@
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import pandas as pd
 import streamlit as st
+
+DEFAULT_TIMEZONE = "America/Caracas"
+
+def get_app_timezone():
+    tz_str = DEFAULT_TIMEZONE
+    try:
+        if hasattr(st, "session_state") and "cfg_timezone" in st.session_state and st.session_state["cfg_timezone"]:
+            tz_str = st.session_state["cfg_timezone"]
+        elif hasattr(st, "secrets") and "APP_TIMEZONE" in st.secrets:
+            tz_str = st.secrets["APP_TIMEZONE"]
+        elif os.getenv("APP_TIMEZONE"):
+            tz_str = os.getenv("APP_TIMEZONE")
+    except Exception:
+        pass
+    try:
+        return ZoneInfo(tz_str)
+    except Exception:
+        return ZoneInfo(DEFAULT_TIMEZONE)
+
+def get_now_local() -> datetime:
+    return datetime.now(get_app_timezone())
 
 DB_HISTORICO_FILE = "historico_ciclos.csv"
 DB_MANUAL_FILE = "operaciones_manuales.csv"
