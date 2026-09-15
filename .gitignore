@@ -12,6 +12,7 @@ __pycache__/
 scratch/
 *.log
 *.json
+!usuarios.json
 dump.html
 
 # Entornos virtuales

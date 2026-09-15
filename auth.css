@@ -145,18 +145,23 @@ div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInp
     border: 1px solid #30363d !important;
     border-radius: 8px !important;
     color: #f0f6fc !important;
-    font-size: 1.2rem !important;
-    letter-spacing: 0.25em !important;
-    text-align: center !important;
+    font-size: 1.05rem !important;
+    letter-spacing: normal !important;
+    text-align: left !important;
+    padding: 10px 14px !important;
     height: 46px !important;
     box-sizing: border-box !important;
     transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
+div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input[type="password"] {
+    letter-spacing: 0.15em !important;
+}
+
 div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input::placeholder {
-    letter-spacing: 0.12em !important;
-    color: #484f58 !important;
-    font-size: 1.02rem !important;
+    letter-spacing: normal !important;
+    color: #6e7681 !important;
+    font-size: 0.95rem !important;
 }
 
 div[data-testid="stForm"]:has(input[type="password"]) div[data-testid="stTextInput"] input:focus {

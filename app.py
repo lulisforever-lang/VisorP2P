@@ -219,18 +219,34 @@ if "cfg_timezone" not in st.session_state:
 if "vista_actual" not in st.session_state:
     st.session_state["vista_actual"] = "Reporte Ganancia Por Ciclo"
 
+usuario_activo = st.session_state.get("usuario_activo", {"username": "Victoria", "nombre": "Victoria", "role": "operador"})
+es_admin = usuario_activo.get("role") == "admin"
+
 OPCIONES_MENU = {
     "Reporte Ganancia Por Ciclo": "⚡",
     "Histórico Semanal": "📊",
     "Historial General": "📜",
     "Registrar Operación Externa": "➕",
-    "Ajustes": "⚙️"
 }
+if es_admin:
+    OPCIONES_MENU["Ajustes"] = "⚙️"
+
+# Si el usuario no es admin y está en Ajustes, redirigir a Reporte
+if not es_admin and st.session_state.get("vista_actual") == "Ajustes":
+    st.session_state["vista_actual"] = "Reporte Ganancia Por Ciclo"
 
 # SIDEBAR DE NAVEGACIÓN
 with st.sidebar:
     st.markdown("### 🦆 RicoMcPato")
-    st.write("")
+    badge_icon = "👑" if es_admin else "👤"
+    badge_role = "Admin" if es_admin else "Operador"
+    color_role = "#f59e0b" if es_admin else "#58a6ff"
+    st.markdown(f"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 6px 10px; margin-bottom: 12px; font-size: 0.84rem; display: flex; align-items: center; justify-content: space-between;">
+        <span style="color: #f0f6fc; font-weight: 600;">{badge_icon} {usuario_activo.get('nombre', 'Usuario')}</span>
+        <span style="background: #21262d; border: 1px solid #30363d; color: {color_role}; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">{badge_role}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     for nombre, icono in OPCIONES_MENU.items():
         tipo_btn = "primary" if st.session_state["vista_actual"] == nombre else "secondary"
@@ -239,9 +255,8 @@ with st.sidebar:
             st.rerun()
 
     st.write("")
-    if st.button("Bloquear 🔒", key="btn_lock_session", type="secondary", use_container_width=True, help="Bloquear sesión"):
-        st.session_state["autenticado"] = False
-        st.rerun()
+    if st.button("Cerrar Sesión 🚪", key="btn_lock_session", type="secondary", use_container_width=True, help="Cerrar sesión segura"):
+        auth.cerrar_sesion()
 
 # Desactivar teclado virtual táctil en selectores y fechas para dispositivos móviles
 desactivar_teclado_virtual()

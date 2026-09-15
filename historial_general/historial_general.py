@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
+import auth
 import data_manager
 
 FIAT_CURRENCY = "VES"
@@ -71,21 +72,27 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
 
 def render_vista():
     st.title("📜 Historial General de Ciclos")
-    st.caption("Explora, filtra y audita todo tu historial acumulado sin restricciones temporales.")
-
     df_all = data_manager.get_historico()
     df_all = data_manager.enriquecer_historico_fechas(df_all)
+
+    usuario_activo = st.session_state.get("usuario_activo", {"username": "Victoria", "nombre": "Victoria", "role": "operador"})
+    es_admin = usuario_activo.get("role") == "admin"
+
+    if not es_admin:
+        df_all = df_all[df_all["Usuario"].astype(str).str.lower() == usuario_activo["username"].lower()]
+        st.caption(f"Explora y audita tu historial acumulado ({usuario_activo['nombre']}).")
+    else:
+        st.caption("Explora, filtra y audita todo tu historial acumulado sin restricciones temporales.")
 
     if df_all.empty:
         st.info("ℹ️ Aún no tienes ciclos registrados en el sistema. Los ciclos cerrados aparecerán aquí.")
         return
 
     # =========================================================================
-    # BARRA DE FILTROS TEMPORALES
+    # BARRA DE FILTROS TEMPORALES Y OPERADOR
     # =========================================================================
     with st.container():
-        st.write("#### 🔍 Filtro de Período")
-        col_tipo, col_detalle = st.columns([1.5, 2.5])
+        st.write("#### 🔍 Filtros de Período y Auditoría")
 
         OPCIONES_FILTRO = [
             "🌐 Todo el Historial",
@@ -96,13 +103,27 @@ def render_vista():
             "⏱️ Rango Personalizado"
         ]
 
-        with col_tipo:
-            tipo_filtro = st.selectbox(
-                "Filtrar histórico por:",
-                OPCIONES_FILTRO,
-                index=0,
-                key="hg_tipo_filtro"
-            )
+        op_sel_hg = "🌐 Todos los Operadores"
+        if es_admin:
+            usuarios_registrados = auth.listar_usuarios()
+            opciones_operadores = ["🌐 Todos los Operadores"] + [u["username"] for u in usuarios_registrados]
+            if not df_all.empty and "Usuario" in df_all.columns:
+                for u in df_all["Usuario"].dropna().unique():
+                    if u and u not in opciones_operadores:
+                        opciones_operadores.append(u)
+
+            col_op, col_tipo, col_detalle = st.columns([1.2, 1.3, 1.8])
+            with col_op:
+                op_sel_hg = st.selectbox("👤 Operador:", opciones_operadores, index=0, key="hg_op_sel")
+            with col_tipo:
+                tipo_filtro = st.selectbox("Filtrar histórico por:", OPCIONES_FILTRO, index=0, key="hg_tipo_filtro")
+        else:
+            col_tipo, col_detalle = st.columns([1.5, 2.5])
+            with col_tipo:
+                tipo_filtro = st.selectbox("Filtrar histórico por:", OPCIONES_FILTRO, index=0, key="hg_tipo_filtro")
+
+        if op_sel_hg != "🌐 Todos los Operadores":
+            df_all = df_all[df_all["Usuario"].astype(str).str.lower() == op_sel_hg.lower()]
 
         df_filtrado = df_all.copy()
         label_periodo = "Todo el Historial Acumulado"
@@ -287,12 +308,17 @@ def render_vista():
 
         color_aj = "#3fb950" if aj > 0 else ("#f85149" if aj < 0 else "#8b949e")
         texto_aj = f"{aj:+.2f} USDT" if aj != 0.0 else "0.00 USDT (Sin ajuste)"
+        usr_ciclo = str(r.get("Usuario", "Victoria"))
+        badge_usr = f'<span class="cycle-badge" style="margin-left: 6px; background: #21262d; color: #58a6ff;">👤 {usr_ciclo}</span>' if es_admin else ""
 
         with st.container(border=True):
             st.markdown(f"""
             <div class="cycle-card-content {cls_pos_neg}">
                 <div class="cycle-top-row">
-                    <div class="cycle-badge">Ciclo #{c_num}</div>
+                    <div style="display: flex; align-items: center;">
+                        <div class="cycle-badge">Ciclo #{c_num}</div>
+                        {badge_usr}
+                    </div>
                     <div class="cycle-profit-text {cls_pos_neg}">{sign}{u_gan:,.2f} USDT</div>
                 </div>
                 <div class="cycle-mid-row">

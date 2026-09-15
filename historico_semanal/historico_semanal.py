@@ -1,5 +1,7 @@
 import pandas as pd
 import streamlit as st
+from datetime import datetime, timedelta
+import auth
 import data_manager
 
 FIAT_CURRENCY = "VES"
@@ -74,6 +76,14 @@ def render_vista():
     df_all = data_manager.get_historico()
     df_all = data_manager.enriquecer_historico_fechas(df_all)
 
+    usuario_activo = st.session_state.get("usuario_activo", {"username": "Victoria", "nombre": "Victoria", "role": "operador"})
+    es_admin = usuario_activo.get("role") == "admin"
+
+    if es_admin:
+        st.caption(f"Panel de Liquidación &bull; Administrador: **{usuario_activo['nombre']}**")
+    else:
+        st.caption(f"Panel de Liquidación de **{usuario_activo['nombre']}** &bull; Cobro de 80% sobre comisión generada.")
+
     # Rango de la semana en curso (Lunes a Domingo)
     lunes_act, domingo_act, label_act = data_manager.get_rango_semana_actual()
     key_actual = lunes_act.strftime("%Y-%m-%d")
@@ -94,26 +104,61 @@ def render_vista():
 
     opciones_keys = list(semanas_dict.keys())
 
-    # Fila superior: Selector de semana y meta semanal
-    col_sel_sem, col_meta, col_comision = st.columns([1.6, 1.2, 1.2])
-    with col_sel_sem:
-        semana_sel_key = st.selectbox(
-            "📅 Período Semanal:",
-            options=opciones_keys,
-            format_func=lambda k: semanas_dict.get(k, k),
-            index=0,
-            key="sel_semana_historico"
-        )
-    with col_meta:
-        meta_semanal = st.number_input("🎯 Meta Semanal (USDT):", min_value=100.0, value=2500.0, step=100.0)
-    with col_comision:
-        st.caption("Estructura de Comisión:")
-        st.markdown(
-            '<div class="comision-info-pill">'
-            '<span><strong style="color: #f0f6fc;">20% Fondo</strong> &bull; 80% Operador &bull; 20% Respaldo</span>'
-            '</div>',
-            unsafe_allow_html=True
-        )
+    op_sel = "🌐 Todos los Operadores"
+    if es_admin:
+        usuarios_registrados = auth.listar_usuarios()
+        opciones_operadores = ["🌐 Todos los Operadores"] + [u["username"] for u in usuarios_registrados]
+        if not df_all.empty and "Usuario" in df_all.columns:
+            for u in df_all["Usuario"].dropna().unique():
+                if u and u not in opciones_operadores:
+                    opciones_operadores.append(u)
+
+        col_op, col_sel_sem, col_meta, col_comision = st.columns([1.3, 1.4, 1.1, 1.2])
+        with col_op:
+            op_sel = st.selectbox("👤 Operador a Auditar:", opciones_operadores, index=0, key="hs_operador_sel")
+        with col_sel_sem:
+            semana_sel_key = st.selectbox(
+                "📅 Período Semanal:",
+                options=opciones_keys,
+                format_func=lambda k: semanas_dict.get(k, k),
+                index=0,
+                key="sel_semana_historico"
+            )
+        with col_meta:
+            meta_semanal = st.number_input("🎯 Meta Semanal (USDT):", min_value=100.0, value=2500.0, step=100.0)
+        with col_comision:
+            st.caption("Estructura de Comisión:")
+            st.markdown(
+                '<div class="comision-info-pill">'
+                '<span><strong style="color: #f0f6fc;">20% Fondo</strong> &bull; 80% Operador &bull; 20% Respaldo</span>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+    else:
+        op_sel = usuario_activo["username"]
+        col_sel_sem, col_meta, col_comision = st.columns([1.6, 1.2, 1.2])
+        with col_sel_sem:
+            semana_sel_key = st.selectbox(
+                "📅 Período Semanal:",
+                options=opciones_keys,
+                format_func=lambda k: semanas_dict.get(k, k),
+                index=0,
+                key="sel_semana_historico"
+            )
+        with col_meta:
+            meta_semanal = st.number_input("🎯 Meta Semanal (USDT):", min_value=100.0, value=2500.0, step=100.0)
+        with col_comision:
+            st.caption("Estructura de Comisión:")
+            st.markdown(
+                '<div class="comision-info-pill">'
+                '<span><strong style="color: #f0f6fc;">20% Fondo</strong> &bull; 80% Operador &bull; 20% Respaldo</span>'
+                '</div>',
+                unsafe_allow_html=True
+            )
+
+    # Filtrar ciclos por operador si no es "Todos los Operadores"
+    if op_sel != "🌐 Todos los Operadores":
+        df_all = df_all[df_all["Usuario"].astype(str).str.lower() == op_sel.lower()]
 
     # Filtrar ciclos pertenecientes a la semana seleccionada
     if not df_all.empty and "Semana_Key" in df_all.columns:
@@ -212,7 +257,7 @@ def render_vista():
 
     # Botones técnicos de filtro activados mediante clic táctil en las tarjetas
     for d in dias_orden:
-        if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}"):
+        if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}", help="tecnico_filtro"):
             if st.session_state.get("filtro_dia_semana") == d:
                 st.session_state["filtro_dia_semana"] = None
             else:
@@ -267,12 +312,17 @@ def render_vista():
 
             color_aj = "#3fb950" if aj > 0 else ("#f85149" if aj < 0 else "#8b949e")
             texto_aj = f"{aj:+.2f} USDT" if aj != 0.0 else "0.00 USDT (Sin ajuste)"
+            usr_ciclo = str(r.get("Usuario", "Victoria"))
+            badge_usr = f'<span class="cycle-badge" style="margin-left: 6px; background: #21262d; color: #58a6ff;">👤 {usr_ciclo}</span>' if es_admin else ""
 
             with st.container(border=True):
                 st.markdown(f"""
                 <div class="cycle-card-content {cls_pos_neg}">
                     <div class="cycle-top-row">
-                        <div class="cycle-badge">Ciclo #{c_num}</div>
+                        <div style="display: flex; align-items: center;">
+                            <div class="cycle-badge">Ciclo #{c_num}</div>
+                            {badge_usr}
+                        </div>
                         <div class="cycle-profit-text {cls_pos_neg}">{sign}{u_gan:,.2f} USDT</div>
                     </div>
                     <div class="cycle-mid-row">

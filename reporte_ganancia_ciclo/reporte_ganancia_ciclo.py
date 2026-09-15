@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
+import auth
 import data_manager
 
 FIAT_CURRENCY = "VES"
@@ -237,6 +238,18 @@ def render_vista(api_key, api_secret):
         st.markdown(f"### 📌 Resumen ({rep['dt_inicio_str']} ➔ {rep['dt_fin_str']})")
 
         st.write("#### ✍️ Ajuste Manual y Confirmación de Ciclo")
+        usuario_activo = st.session_state.get("usuario_activo", {"username": "Victoria", "nombre": "Victoria", "role": "operador"})
+        es_admin = usuario_activo.get("role") == "admin"
+
+        if es_admin:
+            lista_usrs = [u["username"] for u in auth.listar_usuarios()]
+            if usuario_activo["username"] not in lista_usrs:
+                lista_usrs.insert(0, usuario_activo["username"])
+            idx_def = lista_usrs.index(usuario_activo["username"]) if usuario_activo["username"] in lista_usrs else 0
+            usr_registro = st.selectbox("👤 Asignar Ciclo a Operador:", lista_usrs, index=idx_def, key="sel_usr_reg_ciclo")
+        else:
+            usr_registro = usuario_activo["username"]
+
         col_aj1, col_aj2, col_aj3 = st.columns([1.5, 2, 1.5])
         with col_aj1:
             ajuste_val = st.number_input("Ajuste USDT (+/-):", value=0.00, step=0.10, format="%.2f")
@@ -245,7 +258,7 @@ def render_vista(api_key, api_secret):
         pct_ganancia_final = (ganancia_final_ciclo / rep["cap_cic"] * 100) if rep["cap_cic"] > 0 else 0.0
 
         with col_aj2:
-            st.caption("Ganancia neta calculada:")
+            st.caption(f"Ganancia neta ({usr_registro}):")
             color_badge = "badge-pill-pos" if ganancia_final_ciclo >= 0 else "badge-pill-neg"
             st.markdown(f"""
             <div style="font-size: 1.25rem; font-weight: 700; color: {'#3fb950' if ganancia_final_ciclo >= 0 else '#f85149'};">
@@ -272,11 +285,12 @@ def render_vista(api_key, api_secret):
                 "Capital": round(rep["cap_cic"], 2),
                 "Ganancia_Pct": round(pct_ganancia_final, 2),
                 "USDT_Ganado": round(ganancia_final_ciclo, 2),
-                "Ajuste": round(ajuste_val, 2)
+                "Ajuste": round(ajuste_val, 2),
+                "Usuario": usr_registro
             }
             data_manager.guardar_ciclo(nuevo_registro)
-            st.success(f"✅ Ciclo #{nuevo_num_ciclo} registrado exitosamente con {ganancia_final_ciclo:+,.2f} USDT.")
-            st.toast(f"Ciclo #{nuevo_num_ciclo} guardado en el Histórico")
+            st.success(f"✅ Ciclo #{nuevo_num_ciclo} registrado para **{usr_registro}** con {ganancia_final_ciclo:+,.2f} USDT.")
+            st.toast(f"Ciclo #{nuevo_num_ciclo} guardado para {usr_registro}")
 
         st.divider()
 

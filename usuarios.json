@@ -1,0 +1,16 @@
+{
+    "luisit0jr": {
+        "username": "Luisit0Jr",
+        "nombre": "Luisito Jr",
+        "role": "admin",
+        "hash": "51a134407ba126acbee3eb97b09802de16f756082dbb3058622dfda3916ec898",
+        "salt": "912466c142189619c44acf6343522542"
+    },
+    "victoria": {
+        "username": "Victoria",
+        "nombre": "Victoria",
+        "role": "operador",
+        "hash": "74ae804410d6daf830bb425b88bec455a0abaa2ac0abdefd7970d7d2224629f2",
+        "salt": "02d17963bec2a885bc8a916bf1a179a0"
+    }
+}

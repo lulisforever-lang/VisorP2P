@@ -25,30 +25,39 @@ def render_vista():
     st.title("➕ Registrar Operación Externa")
     st.caption("Para transacciones directas, Binance Pay o acuerdos OTC fuera de Binance P2P.")
 
-    with st.form("form_operacion_externa", clear_on_submit=True):
-        c1, c2 = st.columns(2)
+    usuario_activo = st.session_state.get("usuario_activo", {"username": "Victoria", "nombre": "Victoria", "role": "operador"})
+    es_admin = usuario_activo.get("role") == "admin"
+
+    with st.form("form_registro_manual", clear_on_submit=True):
+        st.write("#### 📝 Nueva Transacción Directa")
+        if es_admin:
+            st.caption(f"Registrando operación como Administrador: **{usuario_activo['nombre']}**")
+        else:
+            st.caption(f"Registrando operación para: **{usuario_activo['nombre']}**")
+
+        c1, c2, c3 = st.columns(3)
         with c1:
-            m_tipo = st.selectbox("Tipo de Operación", ["SELL (Venta)", "BUY (Compra)"])
-            m_fecha = st.date_input("Fecha", value=data_manager.get_now_local().date())
-            st.write("**Hora de la Operación:**")
-            col_mh, col_mm, col_mp = st.columns(3)
-            mh_val = col_mh.selectbox("Hora", HORAS_12, index=8)
-            mm_val = col_mm.selectbox("Minuto", MINUTOS, index=0)
-            mp_val = col_mp.selectbox("Periodo", PERIODOS, index=0)
-
+            trade_type_ui = st.selectbox("Tipo de Operación:", ["Venta Externa (SELL)", "Compra Externa (BUY)"])
+            trade_code = "SELL" if "SELL" in trade_type_ui else "BUY"
         with c2:
-            m_usdt = st.number_input("Monto en USDT", min_value=0.0, step=50.0, format="%.2f")
-            m_tasa = st.number_input(f"Tasa acordada ({FIAT_CURRENCY})", min_value=0.0, step=0.10, format="%.3f")
-            m_nota = st.text_input("Nota / Contraparte / Referencia", placeholder="Ej: Venta Binance Pay a Pedro")
+            m_usdt = st.number_input("Monto en USDT:", min_value=0.0, step=10.0, format="%.2f")
+        with c3:
+            m_tasa = st.number_input(f"Tasa de Cambio ({FIAT_CURRENCY}):", min_value=0.0, step=0.1, format="%.3f")
 
-        btn_guardar = st.form_submit_button("Guardar Operación", type="primary", use_container_width=True)
+        c4, c5 = st.columns(2)
+        with c4:
+            f_op = st.date_input("Fecha:", value=data_manager.get_now_local().date(), key="op_ext_date")
+            h_op = st.time_input("Hora:", value=data_manager.get_now_local().time(), key="op_ext_time")
+            dt_manual = datetime.combine(f_op, h_op)
+        with c5:
+            m_nota = st.text_input("Nota / Referencia:", placeholder="Ej. Venta a cliente frecuente por Pago Móvil")
+
+        btn_guardar = st.form_submit_button("Guardar Operación 💾", type="primary", use_container_width=True)
 
         if btn_guardar:
             if m_usdt > 0 and m_tasa > 0:
-                dt_manual = convertir_a_datetime(m_fecha, mh_val, mm_val, mp_val)
-                trade_code = "SELL" if "SELL" in m_tipo else "BUY"
-                total_fiat = m_usdt * m_tasa
-                if st.session_state["cfg_redondear_pagos"] and trade_code == "BUY":
+                total_fiat = round(m_usdt * m_tasa, 2)
+                if st.session_state.get("cfg_redondear_pagos", True) and trade_code == "BUY":
                     total_fiat = math.ceil(total_fiat)
 
                 nuevo_registro = {
@@ -61,17 +70,20 @@ def render_vista():
                     "commission": 0.0,
                     "fiat": FIAT_CURRENCY,
                     "nota": m_nota,
-                    "orderStatus": "COMPLETED"
+                    "orderStatus": "COMPLETED",
+                    "Usuario": usuario_activo["username"]
                 }
 
                 data_manager.guardar_operacion_manual(nuevo_registro)
-                st.success(f"✅ Guardado: {trade_code} {m_usdt:,.2f} USDT a tasa {m_tasa:,.3f} {FIAT_CURRENCY}.")
+                st.success(f"✅ Guardado: {trade_code} {m_usdt:,.2f} USDT a tasa {m_tasa:,.3f} {FIAT_CURRENCY} ({usuario_activo['username']}).")
             else:
                 st.error("Ingresa montos válidos mayores a cero.")
 
     st.divider()
     st.write("#### 📋 Operaciones Manuales Registradas")
     df_man_view = data_manager.get_todas_operaciones_manuales()
+    if not es_admin and not df_man_view.empty and "Usuario" in df_man_view.columns:
+        df_man_view = df_man_view[df_man_view["Usuario"].astype(str).str.lower() == usuario_activo["username"].lower()]
     if not df_man_view.empty:
         df_man_sorted = df_man_view.sort_values("Fecha_Hora", ascending=False)
         for _, r in df_man_sorted.iterrows():

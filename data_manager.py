@@ -28,8 +28,8 @@ def get_now_local() -> datetime:
 DB_HISTORICO_FILE = "historico_ciclos.csv"
 DB_MANUAL_FILE = "operaciones_manuales.csv"
 
-COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste"]
-COLUMNS_MANUAL = ["id", "Fecha_Hora", "tradeType", "amount", "unitPrice", "totalPrice", "commission", "fiat", "nota", "orderStatus"]
+COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario"]
+COLUMNS_MANUAL = ["id", "Fecha_Hora", "tradeType", "amount", "unitPrice", "totalPrice", "commission", "fiat", "nota", "orderStatus", "Usuario"]
 
 def _tiene_gsheets_configurado():
     try:
@@ -115,6 +115,11 @@ def enriquecer_historico_fechas(df: pd.DataFrame) -> pd.DataFrame:
     df["Mes_Label"] = df["DT_Parsed"].apply(
         lambda dt: f"{nombres_meses.get(dt.month, '')} {dt.year}" if pd.notnull(dt) else "Sin Mes"
     )
+    if "Usuario" not in df.columns:
+        df["Usuario"] = "Victoria"
+    else:
+        df["Usuario"] = df["Usuario"].fillna("Victoria").replace("", "Victoria")
+
     df["Anio"] = df["DT_Parsed"].apply(lambda dt: int(dt.year) if pd.notnull(dt) else 0)
     return df
 
@@ -127,6 +132,12 @@ def get_rango_semana_actual() -> tuple:
     return lunes, domingo, label
 
 def guardar_ciclo(nuevo_registro: dict) -> bool:
+    if "Usuario" not in nuevo_registro or not nuevo_registro["Usuario"]:
+        usr = "Victoria"
+        if hasattr(st, "session_state") and "usuario_activo" in st.session_state and st.session_state["usuario_activo"]:
+            usr = st.session_state["usuario_activo"].get("username", "Victoria")
+        nuevo_registro["Usuario"] = usr
+
     df_actual = get_historico()
     nuevo_df = pd.DataFrame([nuevo_registro])
     df_actualizado = pd.concat([df_actual, nuevo_df], ignore_index=True)
@@ -235,6 +246,12 @@ def get_operaciones_manuales_filtradas(t_type: str, start_dt, end_dt) -> pd.Data
     return df[cols]
 
 def guardar_operacion_manual(nuevo_registro: dict) -> bool:
+    if "Usuario" not in nuevo_registro or not nuevo_registro["Usuario"]:
+        usr = "Victoria"
+        if hasattr(st, "session_state") and "usuario_activo" in st.session_state and st.session_state["usuario_activo"]:
+            usr = st.session_state["usuario_activo"].get("username", "Victoria")
+        nuevo_registro["Usuario"] = usr
+
     df_actual = get_todas_operaciones_manuales()
     nuevo_df = pd.DataFrame([nuevo_registro])
     df_actualizado = pd.concat([df_actual, nuevo_df], ignore_index=True)
