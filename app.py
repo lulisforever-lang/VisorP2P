@@ -150,6 +150,20 @@ def desactivar_teclado_virtual():
                 }
             }, true);
 
+            // Listener para interactuar con las tarjetas de días como botones en Histórico Semanal
+            pDoc.addEventListener('click', function(e) {
+                const card = e.target.closest('.metric-day-card');
+                if (card) {
+                    const dia = card.getAttribute('data-dia');
+                    if (dia) {
+                        const btn = Array.from(pDoc.querySelectorAll('button')).find(b => b.innerText.trim() === `Filtro_${dia}`);
+                        if (btn) {
+                            btn.click();
+                        }
+                    }
+                }
+            }, true);
+
             // Observar mutaciones dinámicas del DOM para aplicar en tiempo real
             const observer = new MutationObserver(function() {
                 applyMobileFixes();

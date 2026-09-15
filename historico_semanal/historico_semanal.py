@@ -163,20 +163,33 @@ def render_vista():
         nombres_dias = {0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"}
         df_hist["Dia_Semana"] = df_hist["DT_Parsed"].dt.dayofweek.map(nombres_dias)
 
+        filtro_dia = st.session_state.get("filtro_dia_semana", None)
+
         dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+        if (df_hist["Dia_Semana"] == "Domingo").any() and "Domingo" not in dias_orden:
+            dias_orden.append("Domingo")
+
         cards_html = []
         for dia in dias_orden:
             sub_dia = df_hist[df_hist["Dia_Semana"] == dia]
             ganado_dia = sub_dia["USDT_Ganado"].sum() if not sub_dia.empty else 0.0
             ciclos_dia = len(sub_dia)
             has_profit = ganado_dia > 0
-            cls_card = "metric-day-card has-profit" if has_profit else "metric-day-card"
+            is_selected = (dia == filtro_dia)
+
+            cls_parts = ["metric-day-card"]
+            if has_profit:
+                cls_parts.append("has-profit")
+            if is_selected:
+                cls_parts.append("is-selected")
+            cls_card = " ".join(cls_parts)
+
             color_val = "#3fb950" if has_profit else "#f0f6fc"
             prefix = "+" if has_profit else ""
             badge_ciclos = f"{ciclos_dia} ciclos" if ciclos_dia != 1 else "1 ciclo"
 
             cards_html.append(
-                f'<div class="{cls_card}">'
+                f'<div class="{cls_card}" data-dia="{dia}">'
                 f'<div class="metric-day-header">{dia}</div>'
                 f'<div class="metric-day-val" style="color:{color_val};">{prefix}{ganado_dia:,.2f}</div>'
                 f'<div class="metric-day-sub">{badge_ciclos}</div>'
@@ -186,11 +199,44 @@ def render_vista():
         grid_html = f'<div class="days-grid-container">{"".join(cards_html)}</div>'
         st.markdown(grid_html, unsafe_allow_html=True)
 
+        # Botones técnicos de filtro activados mediante clic táctil en las tarjetas
+        with st.container():
+            st.markdown('<div class="hidden-filter-day-marker"></div>', unsafe_allow_html=True)
+            for d in dias_orden:
+                if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}", help=f"filter_day_{d}"):
+                    if st.session_state.get("filtro_dia_semana") == d:
+                        st.session_state["filtro_dia_semana"] = None
+                    else:
+                        st.session_state["filtro_dia_semana"] = d
+                    st.rerun()
+
         st.divider()
 
         st.write("#### 📑 Histórico de Ciclos Registrados")
 
         df_cards = df_hist.sort_values("Ciclo", ascending=False)
+        if filtro_dia:
+            df_cards = df_cards[df_cards["Dia_Semana"] == filtro_dia]
+
+            col_fb1, col_fb2 = st.columns([0.76, 0.24])
+            with col_fb1:
+                gan_f = df_cards["USDT_Ganado"].sum() if not df_cards.empty else 0.0
+                cls_p = "has-profit" if gan_f > 0 else ""
+                st.markdown(f"""
+                <div class="filtro-activo-bar {cls_p}">
+                    <div class="filtro-activo-text">
+                        📅 Mostrando ciclos de: <strong style="color: #58a6ff;">{filtro_dia}</strong>
+                        <span style="color: #8b949e; font-size: 0.82rem; margin-left: 6px;">({len(df_cards)} {'ciclo' if len(df_cards) == 1 else 'ciclos'})</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_fb2:
+                if st.button("Ver todos los días ✕", key="btn_clear_dia_filter", type="secondary", use_container_width=True):
+                    st.session_state["filtro_dia_semana"] = None
+                    st.rerun()
+
+            if df_cards.empty:
+                st.info(f"ℹ️ No se registraron ciclos el día {filtro_dia}. Haz clic en 'Ver todos los días ✕' o presiona otro día.")
         for _, r in df_cards.iterrows():
             c_num = int(r["Ciclo"])
             f_h = str(r["Fecha_Hora"])
