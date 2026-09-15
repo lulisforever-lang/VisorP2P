@@ -1,5 +1,6 @@
-﻿streamlit>=1.30.0
+streamlit>=1.30.0
 pandas>=2.0.0
 requests>=2.30.0
 python-dotenv>=1.0.0
 st-gsheets-connection>=0.1.0
+tzdata>=2024.1
