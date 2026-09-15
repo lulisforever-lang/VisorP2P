@@ -238,7 +238,6 @@ def render_vista():
                             <span class="cycle-cell-value">{t_c:,.3f} {FIAT_CURRENCY}</span>
                         </div>
                     </div>
-                    <div class="cycle-inner-divider"></div>
                 </div>
                 """, unsafe_allow_html=True)
 

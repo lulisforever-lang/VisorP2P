@@ -385,14 +385,7 @@ div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .
     white-space: nowrap;
 }
 
-.cycle-inner-divider {
-    border-top: 1px dashed #30363d;
-    margin-top: 12px;
-    margin-bottom: 6px;
-    width: 100%;
-}
-
-/* Fila inferior de ajuste y botón minimalista */
+/* Fila inferior de ajuste y botón minimalista con su propio interlineado divisorio */
 div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
 div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
     display: flex !important;
@@ -402,7 +395,9 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
     justify-content: space-between !important;
     gap: 8px !important;
     width: 100% !important;
-    margin-top: 4px !important;
+    border-top: 1px dashed #30363d !important;
+    margin-top: 10px !important;
+    padding-top: 10px !important;
     margin-bottom: 2px !important;
 }
 
@@ -441,7 +436,18 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="co
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1;
+    line-height: 1.2;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) div[data-testid="stButton"],
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) div[data-testid="stButton"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 /* Botón minimalista de esquina */
@@ -492,6 +498,9 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
         align-items: center !important;
         justify-content: space-between !important;
         gap: 8px !important;
+        border-top: 1px dashed #30363d !important;
+        margin-top: 10px !important;
+        padding-top: 10px !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
     div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
