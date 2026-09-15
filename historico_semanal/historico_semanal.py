@@ -209,50 +209,50 @@ def render_vista():
             color_aj = "#3fb950" if aj > 0 else ("#f85149" if aj < 0 else "#8b949e")
             texto_aj = f"{aj:+.2f} USDT" if aj != 0.0 else "0.00 USDT (Sin ajuste)"
 
-            st.markdown(f"""
-            <div class="cycle-card-item {cls_pos_neg} has-footer">
-                <div class="cycle-top-row">
-                    <div class="cycle-badge">Ciclo #{c_num}</div>
-                    <div class="cycle-profit-text {cls_pos_neg}">{sign}{u_gan:,.2f} USDT</div>
-                </div>
-                <div class="cycle-mid-row">
-                    <div>🕒 {f_h}</div>
-                    <span class="cycle-pct-badge {cls_pos_neg}">{sign_pct}{pct_g:.2f}%</span>
-                </div>
-                <div class="cycle-grid">
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Capital</span>
-                        <span class="cycle-cell-value">{cap:,.2f} USDT</span>
-                    </div>
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Comisión</span>
-                        <span class="cycle-cell-value">{com:.3f}%</span>
-                    </div>
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Tasa Venta</span>
-                        <span class="cycle-cell-value">{t_v:,.3f} {FIAT_CURRENCY}</span>
-                    </div>
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Tasa Compra</span>
-                        <span class="cycle-cell-value">{t_c:,.3f} {FIAT_CURRENCY}</span>
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            col_aj1, col_aj2 = st.columns([3.5, 1.2])
-            with col_aj1:
+            with st.container(border=True):
                 st.markdown(f"""
-                <div class="cycle-footer-ajuste-pill {cls_pos_neg}">
-                    <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
-                    <strong style="color: {color_aj};">{texto_aj}</strong>
+                <div class="cycle-card-content {cls_pos_neg}">
+                    <div class="cycle-top-row">
+                        <div class="cycle-badge">Ciclo #{c_num}</div>
+                        <div class="cycle-profit-text {cls_pos_neg}">{sign}{u_gan:,.2f} USDT</div>
+                    </div>
+                    <div class="cycle-mid-row">
+                        <div>🕒 {f_h}</div>
+                        <span class="cycle-pct-badge {cls_pos_neg}">{sign_pct}{pct_g:.2f}%</span>
+                    </div>
+                    <div class="cycle-grid">
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Capital</span>
+                            <span class="cycle-cell-value">{cap:,.2f} USDT</span>
+                        </div>
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Comisión</span>
+                            <span class="cycle-cell-value">{com:.3f}%</span>
+                        </div>
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Tasa Venta</span>
+                            <span class="cycle-cell-value">{t_v:,.3f} {FIAT_CURRENCY}</span>
+                        </div>
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Tasa Compra</span>
+                            <span class="cycle-cell-value">{t_c:,.3f} {FIAT_CURRENCY}</span>
+                        </div>
+                    </div>
+                    <div class="cycle-inner-divider"></div>
                 </div>
                 """, unsafe_allow_html=True)
-            with col_aj2:
-                if st.button("✏️ Editar", key=f"btn_edit_aj_{c_num}", type="secondary", use_container_width=True, help=f"Modificar ajuste del Ciclo #{c_num}"):
-                    editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
 
-            st.markdown('<div class="cycle-card-spacer"></div>', unsafe_allow_html=True)
+                col_aj1, col_aj2 = st.columns([0.88, 0.12])
+                with col_aj1:
+                    st.markdown(f"""
+                    <div class="cycle-inner-ajuste-pill">
+                        <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
+                        <strong style="color: {color_aj};">{texto_aj}</strong>
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col_aj2:
+                    if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
+                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
 
         col_clr1, col_clr2 = st.columns([3, 1])
         with col_clr2:

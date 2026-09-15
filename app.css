@@ -367,10 +367,10 @@ div[data-testid="collapsedControl"] {
 
 /* Pantallas pequeñas (<= 480px) */
 @media (max-width: 480px) {
-    /* Excluir los bloques de tiempo (fecha/hora y 3 columnas) y tarjetas de días para que no se rompan a 100% */
-    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> [data-testid="stColumn"]:nth-child(3):last-child)):not(:has(.metric-day-card)) > [data-testid="stColumn"],
-    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> [data-testid="column"]:nth-child(3):last-child)):not(:has(.metric-day-card)) > [data-testid="column"],
-    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> .stColumn:nth-child(3):last-child)):not(:has(.metric-day-card)) > .stColumn {
+    /* Excluir los bloques de tiempo (fecha/hora y 3 columnas), tarjetas de días y pill de ajuste para que no se rompan a 100% */
+    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> [data-testid="stColumn"]:nth-child(3):last-child)):not(:has(.metric-day-card)):not(:has(.cycle-inner-ajuste-pill)) > [data-testid="stColumn"],
+    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> [data-testid="column"]:nth-child(3):last-child)):not(:has(.metric-day-card)):not(:has(.cycle-inner-ajuste-pill)) > [data-testid="column"],
+    div[data-testid="stHorizontalBlock"]:not(:has([data-testid="stDateInput"])):not(:has(> .stColumn:nth-child(3):last-child)):not(:has(.metric-day-card)):not(:has(.cycle-inner-ajuste-pill)) > .stColumn {
         min-width: 100% !important;
         flex: 1 1 100% !important;
     }

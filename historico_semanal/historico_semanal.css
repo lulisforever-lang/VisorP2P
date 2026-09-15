@@ -268,25 +268,26 @@
 }
 
 /* ==========================================================================
-   TARJETAS RESPONSIVAS DE HISTÓRICO DE CICLOS (VISTA MÓVIL)
+   TARJETAS RESPONSIVAS DE HISTÓRICO DE CICLOS (CONTENEDOR UNIFICADO)
    ========================================================================== */
-.cycle-card-item {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    box-sizing: border-box;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content) {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 12px !important;
+    padding: 14px 16px 10px 16px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2) !important;
+    box-sizing: border-box !important;
+    transition: transform 0.15s ease, border-color 0.15s ease !important;
+    gap: 0px !important;
 }
 
-.cycle-card-item.pos {
-    border-left: 5px solid #3fb950;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content.pos) {
+    border-left: 5px solid #3fb950 !important;
 }
 
-.cycle-card-item.neg {
-    border-left: 5px solid #f85149;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content.neg) {
+    border-left: 5px solid #f85149 !important;
 }
 
 .cycle-top-row {
@@ -384,47 +385,135 @@
     white-space: nowrap;
 }
 
-.cycle-ajuste-pill {
-    margin-top: 10px;
-    padding-top: 6px;
+.cycle-inner-divider {
     border-top: 1px dashed #30363d;
-    font-size: 0.75rem;
-    color: #d29922;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+/* Fila inferior de ajuste y botón minimalista */
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+    margin-bottom: 2px !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:first-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 36px) !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:last-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child {
+    flex: 0 0 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+.cycle-inner-ajuste-pill {
+    font-size: 0.78rem;
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
 }
 
-.cycle-card-item.has-footer {
-    margin-bottom: 0px !important;
-    border-bottom-left-radius: 0px !important;
-    border-bottom-right-radius: 0px !important;
-    border-bottom: 1px dashed #30363d !important;
+/* Botón minimalista de esquina */
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button {
+    width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    background: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #8b949e !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    margin: 0 !important;
 }
 
-.cycle-footer-ajuste-pill {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-top: none;
-    border-bottom-left-radius: 12px;
-    border-bottom-right-radius: 0px;
-    padding: 0 14px;
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 38px;
-    box-sizing: border-box;
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button p,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button p {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+    line-height: 1 !important;
 }
 
-.cycle-footer-ajuste-pill.pos {
-    border-left: 5px solid #3fb950;
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button:hover,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
+    background: #30363d !important;
+    border-color: #58a6ff !important;
+    color: #58a6ff !important;
+    transform: scale(1.08) !important;
 }
 
-.cycle-footer-ajuste-pill.neg {
-    border-left: 5px solid #f85149;
-}
-
-.cycle-card-spacer {
-    margin-bottom: 14px;
+/* Asegurar fila horizontal continua en pantallas móviles */
+@media (max-width: 768px) {
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:first-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: calc(100% - 36px) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:last-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child {
+        flex: 0 0 28px !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        max-width: 28px !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+    }
 }
