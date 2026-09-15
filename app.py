@@ -27,20 +27,19 @@ ENV_PATH = BASE_DIR / ".env"
 # Cargar variables de entorno (override=True fuerza a recargar si editaste el archivo)
 load_dotenv(dotenv_path=ENV_PATH, override=True)
 
-# Resolución de credenciales Binance: busca en st.secrets (Nube) y fallback a .env (Local)
 def get_binance_credentials():
     k = ""
     s = ""
     try:
         if hasattr(st, "secrets"):
-            k = st.secrets.get("BINANCE_API_KEY", "")
-            s = st.secrets.get("BINANCE_API_SECRET", "")
+            k = st.secrets.get("BINANCE_API_KEY") or st.secrets.get("binance_api_key") or ""
+            s = st.secrets.get("BINANCE_API_SECRET") or st.secrets.get("binance_api_secret") or ""
     except Exception:
         pass
     if not k:
-        k = os.getenv("BINANCE_API_KEY", "")
+        k = os.getenv("BINANCE_API_KEY", "") or os.getenv("binance_api_key", "")
     if not s:
-        s = os.getenv("BINANCE_API_SECRET", "")
+        s = os.getenv("BINANCE_API_SECRET", "") or os.getenv("binance_api_secret", "")
     return str(k).strip().strip('"').strip("'"), str(s).strip().strip('"').strip("'")
 
 API_KEY, API_SECRET = get_binance_credentials()
