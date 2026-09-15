@@ -1,3 +1,4 @@
+import textwrap
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
@@ -223,10 +224,18 @@ def render_vista():
 
     filtro_dia = st.session_state.get("filtro_dia_semana", None)
 
-    dias_orden = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    DIAS_MAP = [
+        ("Lunes", "lunes"),
+        ("Martes", "martes"),
+        ("Miércoles", "miercoles"),
+        ("Jueves", "jueves"),
+        ("Viernes", "viernes"),
+        ("Sábado", "sabado"),
+        ("Domingo", "domingo"),
+    ]
 
     cards_html = []
-    for dia in dias_orden:
+    for dia, slug in DIAS_MAP:
         sub_dia = df_hist[df_hist["Dia_Semana"] == dia] if not df_hist.empty else pd.DataFrame()
         ganado_dia = sub_dia["USDT_Ganado"].sum() if not sub_dia.empty else 0.0
         ciclos_dia = len(sub_dia)
@@ -245,7 +254,7 @@ def render_vista():
         badge_ciclos = f"{ciclos_dia} ciclos" if ciclos_dia != 1 else "1 ciclo"
 
         cards_html.append(
-            f'<div class="{cls_card}" data-dia="{dia}">'
+            f'<div class="{cls_card}" data-dia="{dia}" data-dia-slug="{slug}">'
             f'<div class="metric-day-header">{dia}</div>'
             f'<div class="metric-day-val" style="color:{color_val};">{prefix}{ganado_dia:,.2f}</div>'
             f'<div class="metric-day-sub">{badge_ciclos}</div>'
@@ -255,13 +264,13 @@ def render_vista():
     grid_html = f'<div class="days-grid-container">{"".join(cards_html)}</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-    # Botones técnicos de filtro activados mediante clic táctil en las tarjetas
-    for d in dias_orden:
-        if st.button(f"Filtro_{d}", key=f"btn_flt_day_{d}", help="tecnico_filtro"):
-            if st.session_state.get("filtro_dia_semana") == d:
+    # Botones técnicos de filtro activados mediante clic táctil en las tarjetas (ocultos vía CSS)
+    for dia, slug in DIAS_MAP:
+        if st.button(f"Filtro_{dia}", key=f"btn_flt_day_{slug}"):
+            if st.session_state.get("filtro_dia_semana") == dia:
                 st.session_state["filtro_dia_semana"] = None
             else:
-                st.session_state["filtro_dia_semana"] = d
+                st.session_state["filtro_dia_semana"] = dia
             st.rerun()
 
     st.divider()
@@ -279,14 +288,14 @@ def render_vista():
             with col_fb1:
                 gan_f = df_cards["USDT_Ganado"].sum() if not df_cards.empty else 0.0
                 cls_p = "has-profit" if gan_f > 0 else ""
-                st.markdown(f"""
+                st.html(f"""
                 <div class="filtro-activo-bar {cls_p}">
                     <div class="filtro-activo-text">
                         📅 Mostrando ciclos de: <strong style="color: #58a6ff;">{filtro_dia}</strong>
                         <span style="color: #8b949e; font-size: 0.82rem; margin-left: 6px;">({len(df_cards)} {'ciclo' if len(df_cards) == 1 else 'ciclos'})</span>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             with col_fb2:
                 if st.button("Ver todos los días ✕", key="btn_clear_dia_filter", type="secondary", use_container_width=True):
                     st.session_state["filtro_dia_semana"] = None
@@ -316,7 +325,7 @@ def render_vista():
             badge_usr = f'<span class="cycle-badge" style="margin-left: 6px; background: #21262d; color: #58a6ff;">👤 {usr_ciclo}</span>' if es_admin else ""
 
             with st.container(border=True):
-                st.markdown(f"""
+                st.html(f"""
                 <div class="cycle-card-content {cls_pos_neg}">
                     <div class="cycle-top-row">
                         <div style="display: flex; align-items: center;">
@@ -348,16 +357,16 @@ def render_vista():
                         </div>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
 
                 col_aj1, col_aj2 = st.columns([0.88, 0.12])
                 with col_aj1:
-                    st.markdown(f"""
+                    st.html(f"""
                     <div class="cycle-inner-ajuste-pill">
                         <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
                         <strong style="color: {color_aj};">{texto_aj}</strong>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """)
                 with col_aj2:
                     if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
                         editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)

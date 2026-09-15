@@ -603,3 +603,23 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
         align-items: center !important;
     }
 }
+
+/* ==========================================================================
+   OCULTAR BOTONES TÉCNICOS DE FILTRO DIARIO (ACTIVADOS POR CLICK EN CARDS)
+   ========================================================================== */
+div[class*="st-key-btn_flt_day_"] {
+    position: absolute !important;
+    width: 0px !important;
+    height: 0px !important;
+    min-height: 0px !important;
+    max-height: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    border: none !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    z-index: -9999 !important;
+}

@@ -1,3 +1,4 @@
+import textwrap
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
@@ -312,7 +313,7 @@ def render_vista():
         badge_usr = f'<span class="cycle-badge" style="margin-left: 6px; background: #21262d; color: #58a6ff;">👤 {usr_ciclo}</span>' if es_admin else ""
 
         with st.container(border=True):
-            st.markdown(f"""
+            st.html(f"""
             <div class="cycle-card-content {cls_pos_neg}">
                 <div class="cycle-top-row">
                     <div style="display: flex; align-items: center;">
@@ -344,16 +345,16 @@ def render_vista():
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
             col_aj1, col_aj2 = st.columns([0.88, 0.12])
             with col_aj1:
-                st.markdown(f"""
+                st.html(f"""
                 <div class="cycle-inner-ajuste-pill">
                     <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
                     <strong style="color: {color_aj};">{texto_aj}</strong>
                 </div>
-                """, unsafe_allow_html=True)
+                """)
             with col_aj2:
                 if st.button("✏️", key=f"btn_edit_aj_gen_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
                     editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)

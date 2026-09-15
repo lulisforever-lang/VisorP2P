@@ -73,11 +73,13 @@ section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVertical
     align-items: center !important;
 }
 
-/* Ocultar títulos y textos generales */
+/* Ocultar títulos, badge y textos generales */
 section[data-testid="stSidebar"][aria-expanded="false"] h1,
 section[data-testid="stSidebar"][aria-expanded="false"] h2,
 section[data-testid="stSidebar"][aria-expanded="false"] h3,
-section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stMarkdownContainer"] p {
+section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stMarkdownContainer"] p,
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(1),
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(2) {
     display: none !important;
 }
 
@@ -132,32 +134,62 @@ section[data-testid="stSidebar"][aria-expanded="false"] div[data-testid="stButto
     padding: 0 !important;
 }
 
-/* Iconos específicos por botón */
+/* Selección robusta de iconos por clase st-key de Streamlit */
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_Reporte"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_reporte"] button::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="Reporte"]::before,
-section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Reporte"]::before { content: "⚡" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Reporte"]::before {
+    content: "⚡" !important;
+}
 
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_Hist-rico"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_semanal"] button::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="Semanal"]::before,
-section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Semanal"]::before { content: "📊" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Semanal"]::before {
+    content: "📊" !important;
+}
 
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_Historial"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_general"] button::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="General"]::before,
-section[data-testid="stSidebar"][aria-expanded="false"] button[title*="General"]::before { content: "📜" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] button[title*="General"]::before {
+    content: "📜" !important;
+}
 
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_Registrar"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_externa"] button::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="Externa"]::before,
-section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Externa"]::before { content: "➕" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Externa"]::before {
+    content: "➕" !important;
+}
 
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_Ajustes"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_ajustes"] button::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="Ajustes"]::before,
-section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Ajustes"]::before { content: "⚙️" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Ajustes"]::before {
+    content: "⚙️" !important;
+}
 
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-btn_lock_session"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-nav_cerrar_sesion"] button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] div[class*="st-key-cerrar"] button::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="Cerrar"]::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Cerrar"]::before,
 section[data-testid="stSidebar"][aria-expanded="false"] button[aria-label*="Bloquear"]::before,
-section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Bloquear"]::before { content: "🚪" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] button[title*="Bloquear"]::before {
+    content: "🚪" !important;
+}
 
-/* Fallbacks por posición */
-section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(3) button::before { content: "⚡"; }
-section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(4) button::before { content: "📊"; }
-section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(5) button::before { content: "📜"; }
-section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(6) button::before { content: "➕"; }
+/* Fallbacks universales por posición (tanto en Admin como en Operador) */
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(3) button::before { content: "⚡" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(4) button::before { content: "📊" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(5) button::before { content: "📜" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(6) button::before { content: "➕" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(7) button::before { content: "⚙️" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(8) button::before { content: "🚪" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:nth-child(9) button::before { content: "🚪" !important; }
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:has(button):last-of-type button::before,
+section[data-testid="stSidebar"][aria-expanded="false"] [data-testid="stVerticalBlock"] > div:last-child button::before { content: "🚪" !important; }
 
 /* Botón de expandir flechas */
 div[data-testid="collapsedControl"] {
@@ -412,4 +444,22 @@ div[data-testid="stCustomComponentV1"] {
         min-width: 100% !important;
         flex: 1 1 100% !important;
     }
+}
+
+/* Ocultar botones técnicos de filtro de días en Histórico Semanal */
+div[class*="st-key-btn_flt_day_"] {
+    position: absolute !important;
+    width: 0px !important;
+    height: 0px !important;
+    min-height: 0px !important;
+    max-height: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    margin: 0px !important;
+    padding: 0px !important;
+    border: none !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    z-index: -9999 !important;
 }

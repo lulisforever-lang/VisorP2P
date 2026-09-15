@@ -103,22 +103,37 @@ def desactivar_teclado_virtual():
                 });
 
                 // 3. Ocultar de forma segura únicamente los botones técnicos de filtro (Filtro_Lunes, etc.)
+                const filterContainers = pDoc.querySelectorAll('div[class*="st-key-btn_flt_day_"]');
+                filterContainers.forEach(el => {
+                    el.style.setProperty('position', 'absolute', 'important');
+                    el.style.setProperty('width', '0px', 'important');
+                    el.style.setProperty('height', '0px', 'important');
+                    el.style.setProperty('min-height', '0px', 'important');
+                    el.style.setProperty('opacity', '0', 'important');
+                    el.style.setProperty('pointer-events', 'none', 'important');
+                    el.style.setProperty('overflow', 'hidden', 'important');
+                    el.style.setProperty('margin', '0px', 'important');
+                    el.style.setProperty('padding', '0px', 'important');
+                    el.style.setProperty('border', 'none', 'important');
+                    el.style.setProperty('z-index', '-9999', 'important');
+                });
                 const allBtns = pDoc.querySelectorAll('button');
                 allBtns.forEach(btn => {
-                    const txt = (btn.innerText || '').trim();
-                    if (txt.startsWith('Filtro_')) {
+                    const txt = (btn.textContent || btn.innerText || '').trim();
+                    if (txt.startsWith('Filtro_') || txt.includes('Filtro_')) {
                         const elContainer = btn.closest('div[data-testid="stElementContainer"]') || btn.parentElement;
-                        if (elContainer && elContainer.style.position !== 'absolute') {
-                            elContainer.style.position = 'absolute';
-                            elContainer.style.width = '0px';
-                            elContainer.style.height = '0px';
-                            elContainer.style.minHeight = '0px';
-                            elContainer.style.opacity = '0';
-                            elContainer.style.pointerEvents = 'none';
-                            elContainer.style.overflow = 'hidden';
-                            elContainer.style.margin = '0px';
-                            elContainer.style.padding = '0px';
-                            elContainer.style.border = 'none';
+                        if (elContainer) {
+                            elContainer.style.setProperty('position', 'absolute', 'important');
+                            elContainer.style.setProperty('width', '0px', 'important');
+                            elContainer.style.setProperty('height', '0px', 'important');
+                            elContainer.style.setProperty('min-height', '0px', 'important');
+                            elContainer.style.setProperty('opacity', '0', 'important');
+                            elContainer.style.setProperty('pointer-events', 'none', 'important');
+                            elContainer.style.setProperty('overflow', 'hidden', 'important');
+                            elContainer.style.setProperty('margin', '0px', 'important');
+                            elContainer.style.setProperty('padding', '0px', 'important');
+                            elContainer.style.setProperty('border', 'none', 'important');
+                            elContainer.style.setProperty('z-index', '-9999', 'important');
                         }
                     }
                 });
@@ -178,10 +193,13 @@ def desactivar_teclado_virtual():
                 const card = e.target.closest('.metric-day-card');
                 if (card) {
                     const dia = card.getAttribute('data-dia');
-                    if (dia) {
-                        const btn = Array.from(pDoc.querySelectorAll('button')).find(b => b.innerText.trim() === `Filtro_${dia}`);
-                        if (btn) {
-                            btn.click();
+                    const slug = card.getAttribute('data-dia-slug') || (dia ? dia.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '');
+                    if (slug || dia) {
+                        const targetBtn = pDoc.querySelector(`.st-key-btn_flt_day_${slug} button`) ||
+                                          pDoc.querySelector(`.st-key-btn_flt_day_${dia} button`) ||
+                                          Array.from(pDoc.querySelectorAll('button')).find(b => (b.textContent || '').includes(`Filtro_${dia}`));
+                        if (targetBtn) {
+                            targetBtn.click();
                         }
                     }
                 }
