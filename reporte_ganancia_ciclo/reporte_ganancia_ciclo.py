@@ -3,7 +3,7 @@ import hmac
 import math
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 import requests
@@ -115,7 +115,10 @@ def procesar_ordenes(orders, start_dt, end_dt, redondear, incluir_pagadas):
         if not incluir_pagadas:
             df = df[df["orderStatus"].str.upper() == "COMPLETED"]
     if "createTime" in df.columns:
-        df["Fecha_Hora"] = df["createTime"].apply(lambda x: datetime.fromtimestamp(x / 1000.0))
+        app_tz = data_manager.get_app_timezone()
+        df["Fecha_Hora"] = df["createTime"].apply(
+            lambda x: datetime.fromtimestamp(x / 1000.0, tz=timezone.utc).astimezone(app_tz).replace(tzinfo=None)
+        )
     df = df[(df["Fecha_Hora"] >= start_dt) & (df["Fecha_Hora"] <= end_dt)]
     for col in ["amount", "totalPrice", "unitPrice", "commission"]:
         if col in df.columns:
@@ -138,9 +141,11 @@ def render_vista(api_key, api_secret):
     st.title("⚡ Reporte Ganancia Por Ciclo")
     st.subheader("⏱️ Horario Del Ciclo")
 
+    now_local = data_manager.get_now_local()
+
     c_in1, c_in2, c_in3, c_in4 = st.columns([2, 1, 1, 1])
     with c_in1:
-        fecha_inicio = st.date_input("Fecha Inicio", value=datetime.now().date(), key="f_ini")
+        fecha_inicio = st.date_input("Fecha Inicio", value=now_local.date(), key="f_ini")
     with c_in2:
         h_in = st.selectbox("Hora Inicio", HORAS_12, index=11, key="h_ini")
     with c_in3:
@@ -150,7 +155,7 @@ def render_vista(api_key, api_secret):
 
     c_fn1, c_fn2, c_fn3, c_fn4 = st.columns([2, 1, 1, 1])
     with c_fn1:
-        fecha_fin = st.date_input("Fecha Fin", value=datetime.now().date(), key="f_fin")
+        fecha_fin = st.date_input("Fecha Fin", value=now_local.date(), key="f_fin")
     with c_fn2:
         h_fn = st.selectbox("Hora Fin", HORAS_12, index=0, key="h_fn")
     with c_fn3:
@@ -169,8 +174,11 @@ def render_vista(api_key, api_secret):
         elif dt_inicio >= dt_fin:
             st.error("La fecha de inicio debe ser anterior a la de fin.")
         else:
-            ts_start = int((dt_inicio - timedelta(days=2)).timestamp() * 1000)
-            ts_end = int((dt_fin + timedelta(days=1)).timestamp() * 1000)
+            app_tz = data_manager.get_app_timezone()
+            dt_inicio_aware = dt_inicio.replace(tzinfo=app_tz)
+            dt_fin_aware = dt_fin.replace(tzinfo=app_tz)
+            ts_start = int((dt_inicio_aware - timedelta(days=2)).timestamp() * 1000)
+            ts_end = int((dt_fin_aware + timedelta(days=1)).timestamp() * 1000)
             with st.spinner("Conciliando ciclo..."):
                 raw, err_api = fetch_orders(api_key, api_secret, ts_start, ts_end)
                 if err_api:
