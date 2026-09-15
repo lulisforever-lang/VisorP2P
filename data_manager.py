@@ -115,6 +115,51 @@ def reiniciar_semana() -> bool:
 
     return True
 
+def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
+    df = get_historico()
+    if df.empty:
+        return False
+
+    df["Ciclo_Num"] = pd.to_numeric(df["Ciclo"], errors="coerce")
+    mask = df["Ciclo_Num"] == int(ciclo_num)
+    if not mask.any():
+        return False
+
+    idx = df[mask].index[0]
+
+    old_ajuste = float(pd.to_numeric(df.loc[idx, "Ajuste"], errors="coerce")) if pd.notnull(df.loc[idx, "Ajuste"]) else 0.0
+    old_usdt_ganado = float(pd.to_numeric(df.loc[idx, "USDT_Ganado"], errors="coerce")) if pd.notnull(df.loc[idx, "USDT_Ganado"]) else 0.0
+    capital = float(pd.to_numeric(df.loc[idx, "Capital"], errors="coerce")) if pd.notnull(df.loc[idx, "Capital"]) else 0.0
+
+    # Profit base del ciclo antes de ajustes
+    profit_base = old_usdt_ganado - old_ajuste
+    nuevo_usdt_ganado = round(profit_base + nuevo_ajuste, 2)
+    nuevo_pct = round((nuevo_usdt_ganado / capital * 100) if capital > 0 else 0.0, 2)
+
+    df.loc[idx, "Ajuste"] = round(nuevo_ajuste, 2)
+    df.loc[idx, "USDT_Ganado"] = nuevo_usdt_ganado
+    df.loc[idx, "Ganancia_Pct"] = nuevo_pct
+
+    df = df.drop(columns=["Ciclo_Num"])
+
+    # 1. Guardar copia local
+    try:
+        df.to_csv(DB_HISTORICO_FILE, index=False)
+    except Exception:
+        pass
+
+    # 2. Guardar en Google Sheets si aplica
+    conn = _get_gsheets_connection()
+    if conn is not None:
+        try:
+            conn.update(worksheet="historico_ciclos", data=df)
+            return True
+        except Exception as e:
+            st.error(f"Error actualizando ciclo en Google Sheets: {e}")
+            return False
+
+    return True
+
 # =======================================================================
 # OPERACIONES MANUALES / EXTERNAS (OTC)
 # ======================================================================

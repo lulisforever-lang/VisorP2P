@@ -394,3 +394,37 @@
     align-items: center;
     gap: 6px;
 }
+
+.cycle-card-item.has-footer {
+    margin-bottom: 0px !important;
+    border-bottom-left-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+    border-bottom: 1px dashed #30363d !important;
+}
+
+.cycle-footer-ajuste-pill {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-top: none;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 0px;
+    padding: 0 14px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    box-sizing: border-box;
+}
+
+.cycle-footer-ajuste-pill.pos {
+    border-left: 5px solid #3fb950;
+}
+
+.cycle-footer-ajuste-pill.neg {
+    border-left: 5px solid #f85149;
+}
+
+.cycle-card-spacer {
+    margin-bottom: 14px;
+}

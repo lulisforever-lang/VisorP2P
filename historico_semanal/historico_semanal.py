@@ -4,6 +4,70 @@ import data_manager
 
 FIAT_CURRENCY = "VES"
 
+@st.dialog("✏️ Reacomodar Ajuste de Ciclo")
+def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
+    profit_base = u_gan_actual - aj_actual
+
+    st.markdown(f"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <strong style="color: #f0f6fc; font-size: 1.05rem;">Ciclo #{c_num}</strong>
+            <span style="color: #8b949e; font-size: 0.8rem;">🕒 {f_h}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #8b949e;">
+            <span>Capital: <strong style="color: #e6edf3;">{cap:,.2f} USDT</strong></span>
+            <span>Profit Base: <strong style="color: #58a6ff;">{profit_base:,.2f} USDT</strong></span>
+        </div>
+        <div style="margin-top: 6px; font-size: 0.85rem; color: #8b949e;">
+            Ajuste actual registrado: <strong style="color: {'#3fb950' if aj_actual >= 0 else '#f85149'};">{aj_actual:+.2f} USDT</strong>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.write("#### ✍️ Modificar Ajuste")
+    nuevo_ajuste = st.number_input(
+        "Nuevo valor de Ajuste USDT (+/-):",
+        value=float(aj_actual),
+        step=0.10,
+        format="%.2f",
+        key=f"input_modal_ajuste_{c_num}",
+        help="Positivo si sobró dinero. Negativo si faltó enviar a un cliente o hubo algún gasto no reflejado."
+    )
+
+    nueva_ganancia = profit_base + nuevo_ajuste
+    nuevo_pct = (nueva_ganancia / cap * 100) if cap > 0 else 0.0
+    dif_ajuste = nuevo_ajuste - aj_actual
+
+    color_res = "#3fb950" if nueva_ganancia >= 0 else "#f85149"
+    badge_cls = "badge-pill-pos" if nueva_ganancia >= 0 else "badge-pill-neg"
+    sign_n = "+" if nueva_ganancia >= 0 else ""
+    sign_pct = "+" if nuevo_pct >= 0 else ""
+
+    st.caption("Previsualización de la ganancia recalculada:")
+    st.markdown(f"""
+    <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <div style="font-size: 1.25rem; font-weight: 700; color: {color_res};">
+            {sign_n}{nueva_ganancia:,.2f} USDT
+            <span class="{badge_cls}" style="margin-left: 8px; font-size: 0.82rem;">{sign_pct}{nuevo_pct:.2f}%</span>
+        </div>
+        <div style="font-size: 0.78rem; color: #8b949e; margin-top: 4px;">
+            Diferencia vs ajuste previo: <strong style="color: {'#3fb950' if dif_ajuste >= 0 else '#f85149'};">{dif_ajuste:+.2f} USDT</strong>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    c_s1, c_s2 = st.columns(2)
+    with c_s1:
+        if st.button("💾 Guardar Cambios", type="primary", use_container_width=True, key=f"btn_save_aj_{c_num}"):
+            if data_manager.actualizar_ajuste_ciclo(c_num, nuevo_ajuste):
+                st.toast(f"✅ Ciclo #{c_num} actualizado a {nuevo_ajuste:+.2f} USDT")
+                st.rerun()
+            else:
+                st.error("Error al guardar el ajuste.")
+    with c_s2:
+        if st.button("Cancelar", type="secondary", use_container_width=True, key=f"btn_cancel_aj_{c_num}"):
+            st.rerun()
+
 @st.dialog("⚠️ Confirmar Reinicio de Semana")
 def confirmar_reinicio_dialog():
     st.write("¿Estás seguro de que deseas **reiniciar la semana**?")
@@ -142,14 +206,11 @@ def render_vista():
             sign = "+" if u_gan >= 0 else ""
             sign_pct = "+" if pct_g >= 0 else ""
 
-            html_ajuste = f"""
-            <div class="cycle-ajuste-pill">
-                <span>⚙️ Ajuste manual: <strong>{aj:+.2f} USDT</strong></span>
-            </div>
-            """ if aj != 0.0 else ""
+            color_aj = "#3fb950" if aj > 0 else ("#f85149" if aj < 0 else "#8b949e")
+            texto_aj = f"{aj:+.2f} USDT" if aj != 0.0 else "0.00 USDT (Sin ajuste)"
 
             st.markdown(f"""
-            <div class="cycle-card-item {cls_pos_neg}">
+            <div class="cycle-card-item {cls_pos_neg} has-footer">
                 <div class="cycle-top-row">
                     <div class="cycle-badge">Ciclo #{c_num}</div>
                     <div class="cycle-profit-text {cls_pos_neg}">{sign}{u_gan:,.2f} USDT</div>
@@ -176,9 +237,22 @@ def render_vista():
                         <span class="cycle-cell-value">{t_c:,.3f} {FIAT_CURRENCY}</span>
                     </div>
                 </div>
-                {html_ajuste}
             </div>
             """, unsafe_allow_html=True)
+
+            col_aj1, col_aj2 = st.columns([3.5, 1.2])
+            with col_aj1:
+                st.markdown(f"""
+                <div class="cycle-footer-ajuste-pill {cls_pos_neg}">
+                    <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
+                    <strong style="color: {color_aj};">{texto_aj}</strong>
+                </div>
+                """, unsafe_allow_html=True)
+            with col_aj2:
+                if st.button("✏️ Editar", key=f"btn_edit_aj_{c_num}", type="secondary", use_container_width=True, help=f"Modificar ajuste del Ciclo #{c_num}"):
+                    editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
+
+            st.markdown('<div class="cycle-card-spacer"></div>', unsafe_allow_html=True)
 
         col_clr1, col_clr2 = st.columns([3, 1])
         with col_clr2:
