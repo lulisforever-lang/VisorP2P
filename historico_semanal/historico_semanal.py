@@ -95,7 +95,7 @@ def render_vista():
         st.divider()
 
         st.write("#### 📅 Resumen Diario de Rendimiento")
-        df_hist["DT_Parsed"] = pd.to_datetime(df_hist["Fecha_Hora"], errors="coerce")
+        df_hist["DT_Parsed"] = pd.to_datetime(df_hist["Fecha_Hora"], dayfirst=True, errors="coerce")
         nombres_dias = {0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"}
         df_hist["Dia_Semana"] = df_hist["DT_Parsed"].dt.dayofweek.map(nombres_dias)
 
