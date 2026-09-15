@@ -169,3 +169,57 @@
     align-items: center;
     gap: 6px;
 }
+
+/* ==========================================================================
+   BOTONES DE ACCIÓN (EDITAR Y ELIMINAR)
+   ========================================================================== */
+div[class*="st-key-btn_edit_"] button {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    padding: 3px 10px !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+}
+
+div[class*="st-key-btn_edit_"] button:hover {
+    border-color: #58a6ff !important;
+    color: #58a6ff !important;
+    background-color: rgba(56, 139, 253, 0.1) !important;
+}
+
+div[class*="st-key-btn_del_"] button {
+    background-color: #21262d !important;
+    border: 1px solid rgba(248, 81, 73, 0.4) !important;
+    color: #f85149 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    padding: 3px 10px !important;
+    border-radius: 8px !important;
+    transition: all 0.15s ease !important;
+}
+
+div[class*="st-key-btn_del_"] button:hover {
+    border-color: #f85149 !important;
+    color: #ff7b72 !important;
+    background-color: rgba(248, 81, 73, 0.15) !important;
+}
+
+/* Responsive para botones de tarjetas en móviles */
+@media (max-width: 768px) {
+    div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-btn_edit_"]) {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-btn_edit_"]) > div[data-testid="stColumn"]:first-child {
+        display: none !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-btn_edit_"]) > div[data-testid="stColumn"] {
+        flex: 1 1 50% !important;
+        min-width: 0 !important;
+    }
+}

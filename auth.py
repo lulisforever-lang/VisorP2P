@@ -70,7 +70,12 @@ def autenticar(username: str, password: str) -> dict | None:
     if key not in users:
         return None
     user_info = users[key]
-    if check_pw(password.strip(), user_info.get("hash", ""), user_info.get("salt", "")):
+    pw = password.strip()
+    hash_val = user_info.get("hash", "")
+    salt_val = user_info.get("salt", "")
+    if check_pw(pw, hash_val, salt_val) or \
+       (pw.endswith(".") and check_pw(pw[:-1], hash_val, salt_val)) or \
+       check_pw(pw + ".", hash_val, salt_val):
         return {
             "username": user_info.get("username", username),
             "nombre": user_info.get("nombre", username),

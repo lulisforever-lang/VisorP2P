@@ -228,7 +228,12 @@ def get_todas_operaciones_manuales() -> pd.DataFrame:
         df_init.to_csv(DB_MANUAL_FILE, index=False)
         return df_init
 
-    return pd.read_csv(DB_MANUAL_FILE)
+    df = pd.read_csv(DB_MANUAL_FILE)
+    if "Usuario" not in df.columns:
+        df["Usuario"] = "Victoria"
+    else:
+        df["Usuario"] = df["Usuario"].fillna("Victoria")
+    return df
 
 def get_operaciones_manuales_filtradas(t_type: str, start_dt, end_dt) -> pd.DataFrame:
     df = get_todas_operaciones_manuales()
@@ -270,6 +275,66 @@ def guardar_operacion_manual(nuevo_registro: dict) -> bool:
             return True
         except Exception as e:
             st.error(f"Error sincronizando operación con Google Sheets: {e}")
+            return False
+
+    return True
+
+def actualizar_operacion_manual(op_id: str, datos_actualizados: dict) -> bool:
+    df = get_todas_operaciones_manuales()
+    if df.empty:
+        return False
+
+    mask = df["id"].astype(str) == str(op_id)
+    if not mask.any():
+        return False
+
+    for col, val in datos_actualizados.items():
+        if col in df.columns:
+            df.loc[mask, col] = val
+
+    # 1. Guardar copia local
+    try:
+        df.to_csv(DB_MANUAL_FILE, index=False)
+    except Exception:
+        pass
+
+    # 2. Guardar en Google Sheets
+    conn = _get_gsheets_connection()
+    if conn is not None:
+        try:
+            conn.update(worksheet="operaciones_manuales", data=df)
+            return True
+        except Exception as e:
+            st.error(f"Error actualizando operación en Google Sheets: {e}")
+            return False
+
+    return True
+
+def eliminar_operacion_manual(op_id: str) -> bool:
+    df = get_todas_operaciones_manuales()
+    if df.empty:
+        return False
+
+    mask = df["id"].astype(str) == str(op_id)
+    if not mask.any():
+        return False
+
+    df = df[~mask]
+
+    # 1. Guardar copia local
+    try:
+        df.to_csv(DB_MANUAL_FILE, index=False)
+    except Exception:
+        pass
+
+    # 2. Guardar en Google Sheets
+    conn = _get_gsheets_connection()
+    if conn is not None:
+        try:
+            conn.update(worksheet="operaciones_manuales", data=df)
+            return True
+        except Exception as e:
+            st.error(f"Error eliminando operación en Google Sheets: {e}")
             return False
 
     return True
