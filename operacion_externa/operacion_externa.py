@@ -29,7 +29,7 @@ def render_vista():
         c1, c2 = st.columns(2)
         with c1:
             m_tipo = st.selectbox("Tipo de Operación", ["SELL (Venta)", "BUY (Compra)"])
-            m_fecha = st.date_input("Fecha", value=datetime.now().date())
+            m_fecha = st.date_input("Fecha", value=data_manager.get_now_local().date())
             st.write("**Hora de la Operación:**")
             col_mh, col_mm, col_mp = st.columns(3)
             mh_val = col_mh.selectbox("Hora", HORAS_12, index=8)
