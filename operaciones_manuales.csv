@@ -1,3 +1,4 @@
 id,Fecha_Hora,tradeType,amount,unitPrice,totalPrice,commission,fiat,nota,orderStatus,Usuario
 EXT-1789401614,2026-09-13 21:25:00,SELL,39600.0,963.7,38162520.0,0.0,VES,Brawcoins,,Victoria
 EXT-1789415844,2026-09-14 14:06:00,SELL,19300.0,958.7,18502910.0,0.0,VES,Pejagobla,COMPLETED,Victoria
+EXT-1789511370,2026-09-15 15:23:00,SELL,389.25,968.751,377086.33,0.0,VES,Reintegro Arnoldo Pago Doble,COMPLETED,Victoria
