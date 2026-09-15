@@ -356,6 +356,7 @@ div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 8px 12px;
+    margin-bottom: 8px;
 }
 
 @media (min-width: 768px) {
@@ -396,7 +397,7 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
     gap: 8px !important;
     width: 100% !important;
     border-top: 1px dashed #30363d !important;
-    margin-top: 10px !important;
+    margin-top: 16px !important;
     padding-top: 10px !important;
     margin-bottom: 2px !important;
 }
@@ -499,7 +500,7 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
         justify-content: space-between !important;
         gap: 8px !important;
         border-top: 1px dashed #30363d !important;
-        margin-top: 10px !important;
+        margin-top: 16px !important;
         padding-top: 10px !important;
     }
     div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
