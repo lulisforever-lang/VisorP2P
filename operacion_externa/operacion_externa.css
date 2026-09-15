@@ -57,29 +57,34 @@
 }
 
 /* ==========================================================================
-   TARJETAS RESPONSIVAS DE OPERACIONES EXTERNAS
+   TARJETAS RESPONSIVAS DE OPERACIONES EXTERNAS (CONTENEDOR UNIFICADO)
    ========================================================================== */
-.cycle-card-item {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    box-sizing: border-box;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content) {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 12px !important;
+    padding: 14px 16px 10px 16px !important;
+    margin-bottom: 14px !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2) !important;
+    box-sizing: border-box !important;
+    transition: transform 0.15s ease, border-color 0.15s ease !important;
+    gap: 0px !important;
 }
 
-.cycle-card-item:hover {
-    border-color: #58a6ff;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content.sell) {
+    border-left: 5px solid #388bfd !important;
 }
 
-.cycle-card-item.sell {
-    border-left: 5px solid #388bfd;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content.buy) {
+    border-left: 5px solid #3fb950 !important;
 }
 
-.cycle-card-item.buy {
-    border-left: 5px solid #3fb950;
+div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content):hover {
+    border-color: #58a6ff !important;
+}
+
+.cycle-card-content {
+    width: 100%;
 }
 
 .cycle-top-row {
@@ -159,67 +164,150 @@
     white-space: nowrap;
 }
 
-.cycle-ajuste-pill {
-    margin-top: 10px;
-    padding-top: 6px;
-    border-top: 1px dashed #30363d;
-    font-size: 0.75rem;
-    color: #d29922;
+/* ==========================================================================
+   FILA INFERIOR: NOTA Y BOTONES MINIMALISTAS EN ESQUINA INFERIOR DERECHA
+   ========================================================================== */
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    width: 100% !important;
+    border-top: 1px dashed #30363d !important;
+    margin-top: 14px !important;
+    padding-top: 10px !important;
+    margin-bottom: 2px !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:first-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 64px) !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child),
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:not(:first-child),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child) {
+    flex: 0 0 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+.cycle-inner-ajuste-pill {
+    font-size: 0.78rem;
+    color: #8b949e;
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-/* ==========================================================================
-   BOTONES DE ACCIÓN (EDITAR Y ELIMINAR)
-   ========================================================================== */
-div[class*="st-key-btn_edit_"] button {
-    background-color: #21262d !important;
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) div[data-testid="stButton"],
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) div[data-testid="stButton"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Botones minimalistas de icono (✏️ y 🗑️) */
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button {
+    width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    padding: 0 !important;
+    border-radius: 6px !important;
+    background: #21262d !important;
     border: 1px solid #30363d !important;
-    color: #c9d1d9 !important;
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
-    padding: 3px 10px !important;
-    border-radius: 8px !important;
+    color: #8b949e !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.75rem !important;
+    line-height: 1 !important;
     transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
+    margin: 0 !important;
 }
 
-div[class*="st-key-btn_edit_"] button:hover {
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) button p,
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button p {
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) div[class*="st-key-btn_edit_"] button:hover {
+    background: #30363d !important;
     border-color: #58a6ff !important;
     color: #58a6ff !important;
-    background-color: rgba(56, 139, 253, 0.1) !important;
+    transform: scale(1.08) !important;
 }
 
-div[class*="st-key-btn_del_"] button {
-    background-color: #21262d !important;
-    border: 1px solid rgba(248, 81, 73, 0.4) !important;
-    color: #f85149 !important;
-    font-size: 0.8rem !important;
-    font-weight: 600 !important;
-    padding: 3px 10px !important;
-    border-radius: 8px !important;
-    transition: all 0.15s ease !important;
-}
-
-div[class*="st-key-btn_del_"] button:hover {
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) div[class*="st-key-btn_del_"] button:hover {
+    background: rgba(248, 81, 73, 0.15) !important;
     border-color: #f85149 !important;
     color: #ff7b72 !important;
-    background-color: rgba(248, 81, 73, 0.15) !important;
+    transform: scale(1.08) !important;
 }
 
-/* Responsive para botones de tarjetas en móviles */
+/* Responsivo en móviles */
 @media (max-width: 768px) {
-    div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-btn_edit_"]) {
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
         display: flex !important;
         flex-direction: row !important;
-        gap: 8px !important;
-        width: 100% !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        border-top: 1px dashed #30363d !important;
+        margin-top: 14px !important;
+        padding-top: 10px !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-btn_edit_"]) > div[data-testid="stColumn"]:first-child {
-        display: none !important;
-    }
-    div[data-testid="stHorizontalBlock"]:has(div[class*="st-key-btn_edit_"]) > div[data-testid="stColumn"] {
-        flex: 1 1 50% !important;
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child,
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:first-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:first-child,
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:first-child {
+        flex: 1 1 auto !important;
+        width: auto !important;
         min-width: 0 !important;
+        max-width: calc(100% - 64px) !important;
+    }
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child),
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:not(:first-child),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child) {
+        flex: 0 0 28px !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        max-width: 28px !important;
     }
 }

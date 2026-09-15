@@ -230,57 +230,63 @@ def render_vista():
 
             badge_usr_html = f'<span style="background: rgba(139, 148, 158, 0.15); color: #c9d1d9; border: 1px solid rgba(139, 148, 158, 0.3); border-radius: 12px; font-size: 0.72rem; padding: 2px 8px; font-weight: 500;">👤 {op_usr}</span>' if es_admin else ""
 
-            html_nota = f"""
-            <div class="cycle-ajuste-pill" style="color: #8b949e;">
-                <span>📝 Nota: <strong style="color: #f0f6fc;">{nota}</strong></span>
-            </div>
-            """ if nota and nota.lower() != "none" else ""
+            with st.container(border=True):
+                st.html(f"""
+                <div class="cycle-card-content {cls_trade}">
+                    <div class="cycle-top-row">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="cycle-badge" style="{badge_style}">{tipo_label}</div>
+                            <span style="font-size: 0.78rem; color: #8b949e;">#{op_id}</span>
+                            {badge_usr_html}
+                        </div>
+                        <div class="cycle-profit-text" style="color: {amount_color};">{m_usdt:,.2f} USDT</div>
+                    </div>
+                    <div class="cycle-mid-row">
+                        <div>🕒 {f_h}</div>
+                        <span class="cycle-pct-badge" style="{fiat_badge_style}">{m_total:,.2f} {fiat}</span>
+                    </div>
+                    <div class="cycle-grid">
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Tasa Acordada</span>
+                            <span class="cycle-cell-value">{tasa:,.3f} {fiat}</span>
+                        </div>
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Total en {fiat}</span>
+                            <span class="cycle-cell-value">{m_total:,.2f}</span>
+                        </div>
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Comisión</span>
+                            <span class="cycle-cell-value">{com:,.2f} USDT</span>
+                        </div>
+                        <div class="cycle-cell">
+                            <span class="cycle-cell-label">Estado</span>
+                            <span class="cycle-cell-value" style="color: #3fb950;">{status}</span>
+                        </div>
+                    </div>
+                </div>
+                """)
 
-            card_html = f"""
-            <div class="cycle-card-item {cls_trade}" style="margin-bottom: {'4px' if puede_gestionar else '12px'};">
-                <div class="cycle-top-row">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <div class="cycle-badge" style="{badge_style}">{tipo_label}</div>
-                        <span style="font-size: 0.78rem; color: #8b949e;">#{op_id}</span>
-                        {badge_usr_html}
-                    </div>
-                    <div class="cycle-profit-text" style="color: {amount_color};">{m_usdt:,.2f} USDT</div>
-                </div>
-                <div class="cycle-mid-row">
-                    <div>🕒 {f_h}</div>
-                    <span class="cycle-pct-badge" style="{fiat_badge_style}">{m_total:,.2f} {fiat}</span>
-                </div>
-                <div class="cycle-grid">
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Tasa Acordada</span>
-                        <span class="cycle-cell-value">{tasa:,.3f} {fiat}</span>
-                    </div>
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Total en {fiat}</span>
-                        <span class="cycle-cell-value">{m_total:,.2f}</span>
-                    </div>
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Comisión</span>
-                        <span class="cycle-cell-value">{com:,.2f} USDT</span>
-                    </div>
-                    <div class="cycle-cell">
-                        <span class="cycle-cell-label">Estado</span>
-                        <span class="cycle-cell-value" style="color: #3fb950;">{status}</span>
-                    </div>
-                </div>
-                {html_nota}
-            </div>
-            """
-            st.html(card_html)
+                html_nota_inner = f'<span>📝 Nota: <strong style="color: #f0f6fc;">{nota}</strong></span>' if nota and nota.lower() != "none" else '<span style="color: #8b949e;">📝 <em>Sin nota</em></span>'
 
-            if puede_gestionar:
-                c_space, c_edit, c_del = st.columns([0.50, 0.25, 0.25])
-                with c_edit:
-                    if st.button("✏️ Editar", key=f"btn_edit_{op_id}", use_container_width=True):
-                        editar_operacion_dialog(op_dict)
-                with c_del:
-                    if st.button("🗑️ Eliminar", key=f"btn_del_{op_id}", use_container_width=True):
-                        eliminar_operacion_dialog(op_dict)
-                st.write("")
+                if puede_gestionar:
+                    col_nota, col_edit, col_del = st.columns([0.84, 0.08, 0.08])
+                    with col_nota:
+                        st.html(f"""
+                        <div class="cycle-inner-ajuste-pill">
+                            {html_nota_inner}
+                        </div>
+                        """)
+                    with col_edit:
+                        if st.button("✏️", key=f"btn_edit_{op_id}", type="secondary", help=f"Editar operación #{op_id}"):
+                            editar_operacion_dialog(op_dict)
+                    with col_del:
+                        if st.button("🗑️", key=f"btn_del_{op_id}", type="secondary", help=f"Eliminar operación #{op_id}"):
+                            eliminar_operacion_dialog(op_dict)
+                else:
+                    st.html(f"""
+                    <div class="cycle-inner-ajuste-pill" style="border-top: 1px dashed #30363d; margin-top: 14px; padding-top: 10px;">
+                        {html_nota_inner}
+                    </div>
+                    """)
     else:
         st.info("No hay operaciones externas registradas aún.")
