@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 import importlib
 import auth
@@ -63,6 +64,104 @@ def cargar_css(ruta_relativa):
         with open(ruta, "r", encoding="utf-8") as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+def desactivar_teclado_virtual():
+    """
+    Evita que se despliegue el teclado virtual táctil en dispositivos móviles
+    al pulsar selectores (st.selectbox como Hora, Minuto, Periodo) o selectores
+    de fecha (st.date_input), preservando la interacción táctil directa con los desplegables.
+    """
+    components.html("""
+    <script>
+    (function() {
+        const pDoc = window.parent.document;
+        if (!pDoc) return;
+
+        function applyMobileFixes() {
+            try {
+                // 1. Desactivar teclado en selectboxes manteniendo el desplegable interactivo
+                const selectInputs = pDoc.querySelectorAll('div[data-testid="stSelectbox"] input');
+                selectInputs.forEach(inp => {
+                    if (inp.getAttribute('inputmode') !== 'none') {
+                        inp.setAttribute('inputmode', 'none');
+                    }
+                    if (!inp.readOnly) {
+                        inp.readOnly = true;
+                    }
+                });
+
+                // 2. Desactivar teclado en los números de fecha (DateField spinbuttons)
+                const dateSpans = pDoc.querySelectorAll('div[data-testid="stDateInput"] span[role="spinbutton"]');
+                dateSpans.forEach(span => {
+                    if (span.getAttribute('inputmode') !== 'none') {
+                        span.setAttribute('inputmode', 'none');
+                    }
+                    if (span.getAttribute('contenteditable') !== 'false') {
+                        span.setAttribute('contenteditable', 'false');
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Listener para abrir el selector nativo de fecha al tocar el campo de fecha
+        if (!pDoc._stMobileDatePickerAttached) {
+            pDoc._stMobileDatePickerAttached = true;
+
+            pDoc.addEventListener('click', function(e) {
+                const dateContainer = e.target.closest('div[data-testid="stDateInput"]');
+                if (dateContainer) {
+                    const hiddenDate = dateContainer.querySelector('input[type="date"]');
+                    if (hiddenDate && typeof hiddenDate.showPicker === 'function') {
+                        try {
+                            hiddenDate.showPicker();
+                        } catch(err) {}
+                    }
+                }
+            }, true);
+
+            // Sincronizar cambios de fecha desde el selector nativo hacia React/Streamlit
+            pDoc.addEventListener('change', function(e) {
+                if (e.target && e.target.type === 'date') {
+                    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+                    if (setter) {
+                        setter.call(e.target, e.target.value);
+                    }
+                    e.target.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }, true);
+
+            // Suprimir teclado de forma preventiva ante eventos de foco y pulsación
+            pDoc.addEventListener('focusin', function(e) {
+                const t = e.target;
+                if (!t) return;
+                if (t.closest('div[data-testid="stSelectbox"]')) {
+                    t.setAttribute('inputmode', 'none');
+                    if (t.tagName === 'INPUT') t.readOnly = true;
+                } else if (t.closest('div[data-testid="stDateInput"]')) {
+                    t.setAttribute('inputmode', 'none');
+                    if (t.tagName === 'SPAN') t.setAttribute('contenteditable', 'false');
+                }
+            }, true);
+
+            pDoc.addEventListener('pointerdown', function(e) {
+                const t = e.target;
+                if (!t) return;
+                if (t.closest('div[data-testid="stSelectbox"]') || t.closest('div[data-testid="stDateInput"]')) {
+                    applyMobileFixes();
+                }
+            }, true);
+
+            // Observar mutaciones dinámicas del DOM para aplicar en tiempo real
+            const observer = new MutationObserver(function() {
+                applyMobileFixes();
+            });
+            observer.observe(pDoc.body, { childList: true, subtree: true });
+        }
+
+        applyMobileFixes();
+    })();
+    </script>
+    """, height=0)
+
 # Cargamos el CSS global y del sidebar
 cargar_css("app.css")
 
@@ -105,6 +204,9 @@ with st.sidebar:
     if st.button("Bloquear 🔒", key="btn_lock_session", type="secondary", use_container_width=True, help="Bloquear sesión"):
         st.session_state["autenticado"] = False
         st.rerun()
+
+# Desactivar teclado virtual táctil en selectores y fechas para dispositivos móviles
+desactivar_teclado_virtual()
 
 vista = st.session_state["vista_actual"]
 

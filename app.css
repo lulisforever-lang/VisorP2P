@@ -155,6 +155,22 @@ div[data-testid="collapsedControl"] {
     display: none !important;
 }
 
+/* Ocultar iframe y contenedor del script para desactivar teclado táctil */
+iframe[title="streamlit.components.v1.html"],
+div[data-testid="stCustomComponentV1"]:has(> iframe[title="streamlit.components.v1.html"]),
+div[data-testid="stCustomComponentV1"] {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
 /* Ajustes para pantallas medianas y tablets (<= 768px) */
 @media (max-width: 768px) {
     /* Desplazar el contenido principal ÚNICAMENTE cuando el riel lateral (sidebar) está presente */
