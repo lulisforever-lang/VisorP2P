@@ -217,6 +217,12 @@
     margin-bottom: 4px;
 }
 
+.metric-day-header,
+.metric-day-val,
+.metric-day-sub {
+    pointer-events: none !important;
+}
+
 .metric-day-sub {
     font-size: 0.74rem;
     font-weight: 500;
@@ -228,16 +234,18 @@ div[data-testid="stElementContainer"]:has(button[title*="tecnico_filtro"]),
 div[data-testid="stElementContainer"]:has(button[aria-label*="tecnico_filtro"]),
 button[title*="tecnico_filtro"],
 button[aria-label*="tecnico_filtro"] {
-    position: absolute !important;
-    width: 0 !important;
-    height: 0 !important;
+    position: fixed !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
     min-height: 0 !important;
     opacity: 0 !important;
-    pointer-events: none !important;
     overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
+    z-index: -9999 !important;
 }
 
 .metric-label {

@@ -304,7 +304,33 @@ def render_vista():
 
     st.write("#### 📅 Resumen Diario de Rendimiento")
 
-    filtro_dia = st.session_state.get("filtro_dia_semana", None)
+    now_local = data_manager.get_now_local()
+    nombres_dias = {0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"}
+    dia_hoy_nombre = nombres_dias.get(now_local.weekday(), "Miércoles")
+
+    # Control de cambio de semana seleccionada
+    last_semana = st.session_state.get("_hs_last_semana_key")
+    if last_semana != semana_sel_key:
+        st.session_state["_hs_last_semana_key"] = semana_sel_key
+        if semana_sel_key == key_actual:
+            st.session_state["filtro_dia_semana"] = dia_hoy_nombre
+        else:
+            st.session_state["filtro_dia_semana"] = "TODOS"
+
+    # Si es la semana actual y no se ha inicializado el filtro (o se reseteó al ingresar), predeterminar el día de hoy
+    if semana_sel_key == key_actual and (st.session_state.get("filtro_dia_semana") is None):
+        st.session_state["filtro_dia_semana"] = dia_hoy_nombre
+
+    filtro_estado = st.session_state.get("filtro_dia_semana")
+    if filtro_estado == "TODOS":
+        filtro_dia = None
+    elif filtro_estado is not None:
+        filtro_dia = filtro_estado
+    elif semana_sel_key == key_actual:
+        filtro_dia = dia_hoy_nombre
+        st.session_state["filtro_dia_semana"] = dia_hoy_nombre
+    else:
+        filtro_dia = None
 
     DIAS_MAP = [
         ("Lunes", "lunes"),
@@ -336,7 +362,15 @@ def render_vista():
         badge_ciclos = f"{ciclos_dia} ciclos" if ciclos_dia != 1 else "1 ciclo"
 
         cards_html.append(
-            f'<div class="{cls_card}" data-dia="{dia}" data-dia-slug="{slug}">'
+            f'<div class="{cls_card}" data-dia="{dia}" data-dia-slug="{slug}" role="button" tabindex="0" '
+            f'onclick="(function(btnKey, dName){{'
+            f' if (!window._lastDayClick || Date.now() - window._lastDayClick > 400) {{'
+            f'   window._lastDayClick = Date.now();'
+            f'   var b = document.querySelector(\'.st-key-\' + btnKey + \' button\') || '
+            f'           Array.from(document.querySelectorAll(\'button\')).find(function(x){{ return (x.textContent||\'\').includes(\'Filtro_\' + dName); }});'
+            f'   if (b) {{ b.click(); }}'
+            f' }}'
+            f'}})(\'btn_flt_day_{slug}\', \'{dia}\')">'
             f'<div class="metric-day-header">{dia}</div>'
             f'<div class="metric-day-val" style="color:{color_val};">{prefix}{ganado_dia:,.2f}</div>'
             f'<div class="metric-day-sub">{badge_ciclos}</div>'
@@ -346,11 +380,11 @@ def render_vista():
     grid_html = f'<div class="days-grid-container">{"".join(cards_html)}</div>'
     st.markdown(grid_html, unsafe_allow_html=True)
 
-    # Botones técnicos de filtro activados mediante clic táctil en las tarjetas (ocultos vía CSS)
+    # Botones técnicos de filtro activados mediante clic táctil en las tarjetas (ocultos vía CSS fuera de pantalla)
     for dia, slug in DIAS_MAP:
         if st.button(f"Filtro_{dia}", key=f"btn_flt_day_{slug}"):
-            if st.session_state.get("filtro_dia_semana") == dia:
-                st.session_state["filtro_dia_semana"] = None
+            if filtro_dia == dia:
+                st.session_state["filtro_dia_semana"] = "TODOS"
             else:
                 st.session_state["filtro_dia_semana"] = dia
             st.rerun()
@@ -380,7 +414,7 @@ def render_vista():
                 """)
             with col_fb2:
                 if st.button("Ver todos los días ✕", key="btn_clear_dia_filter", type="secondary", use_container_width=True):
-                    st.session_state["filtro_dia_semana"] = None
+                    st.session_state["filtro_dia_semana"] = "TODOS"
                     st.rerun()
 
             if df_cards.empty:

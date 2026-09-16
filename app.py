@@ -110,15 +110,16 @@ def desactivar_teclado_virtual():
                     }
                 });
 
-                // 3. Ocultar de forma segura únicamente los botones técnicos de filtro (Filtro_Lunes, etc.)
+                // 3. Ocultar de forma segura fuera de pantalla los botones técnicos de filtro (Filtro_Lunes, etc.) sin anular eventos
                 const filterContainers = pDoc.querySelectorAll('div[class*="st-key-btn_flt_day_"]');
                 filterContainers.forEach(el => {
-                    el.style.setProperty('position', 'absolute', 'important');
-                    el.style.setProperty('width', '0px', 'important');
-                    el.style.setProperty('height', '0px', 'important');
+                    el.style.setProperty('position', 'fixed', 'important');
+                    el.style.setProperty('top', '-9999px', 'important');
+                    el.style.setProperty('left', '-9999px', 'important');
+                    el.style.setProperty('width', '1px', 'important');
+                    el.style.setProperty('height', '1px', 'important');
                     el.style.setProperty('min-height', '0px', 'important');
                     el.style.setProperty('opacity', '0', 'important');
-                    el.style.setProperty('pointer-events', 'none', 'important');
                     el.style.setProperty('overflow', 'hidden', 'important');
                     el.style.setProperty('margin', '0px', 'important');
                     el.style.setProperty('padding', '0px', 'important');
@@ -131,12 +132,13 @@ def desactivar_teclado_virtual():
                     if (txt.startsWith('Filtro_') || txt.includes('Filtro_')) {
                         const elContainer = btn.closest('div[data-testid="stElementContainer"]') || btn.parentElement;
                         if (elContainer) {
-                            elContainer.style.setProperty('position', 'absolute', 'important');
-                            elContainer.style.setProperty('width', '0px', 'important');
-                            elContainer.style.setProperty('height', '0px', 'important');
+                            elContainer.style.setProperty('position', 'fixed', 'important');
+                            elContainer.style.setProperty('top', '-9999px', 'important');
+                            elContainer.style.setProperty('left', '-9999px', 'important');
+                            elContainer.style.setProperty('width', '1px', 'important');
+                            elContainer.style.setProperty('height', '1px', 'important');
                             elContainer.style.setProperty('min-height', '0px', 'important');
                             elContainer.style.setProperty('opacity', '0', 'important');
-                            elContainer.style.setProperty('pointer-events', 'none', 'important');
                             elContainer.style.setProperty('overflow', 'hidden', 'important');
                             elContainer.style.setProperty('margin', '0px', 'important');
                             elContainer.style.setProperty('padding', '0px', 'important');
@@ -203,6 +205,9 @@ def desactivar_teclado_virtual():
                     const dia = card.getAttribute('data-dia');
                     const slug = card.getAttribute('data-dia-slug') || (dia ? dia.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : '');
                     if (slug || dia) {
+                        const now = Date.now();
+                        if (card._lastDayClick && (now - card._lastDayClick < 400)) return;
+                        card._lastDayClick = now;
                         const targetBtn = pDoc.querySelector(`.st-key-btn_flt_day_${slug} button`) ||
                                           pDoc.querySelector(`.st-key-btn_flt_day_${dia} button`) ||
                                           Array.from(pDoc.querySelectorAll('button')).find(b => (b.textContent || '').includes(`Filtro_${dia}`));
@@ -277,7 +282,10 @@ with st.sidebar:
     for nombre, icono in OPCIONES_MENU.items():
         tipo_btn = "primary" if st.session_state["vista_actual"] == nombre else "secondary"
         if st.button(f"{nombre}  {icono}", key=f"nav_{nombre}", type=tipo_btn, use_container_width=True, help=nombre):
-            st.session_state["vista_actual"] = nombre
+            if st.session_state.get("vista_actual") != nombre:
+                st.session_state["vista_actual"] = nombre
+                if nombre == "Histórico Semanal":
+                    st.session_state["filtro_dia_semana"] = None
             st.rerun()
 
     st.write("")

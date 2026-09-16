@@ -448,18 +448,17 @@ div[data-testid="stCustomComponentV1"] {
 
 /* Ocultar botones técnicos de filtro de días en Histórico Semanal */
 div[class*="st-key-btn_flt_day_"] {
-    position: absolute !important;
-    width: 0px !important;
-    height: 0px !important;
+    position: fixed !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
     min-height: 0px !important;
     max-height: 0px !important;
     opacity: 0 !important;
-    pointer-events: none !important;
     overflow: hidden !important;
     margin: 0px !important;
     padding: 0px !important;
     border: none !important;
-    clip: rect(0, 0, 0, 0) !important;
-    clip-path: inset(50%) !important;
     z-index: -9999 !important;
 }
