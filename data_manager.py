@@ -180,7 +180,7 @@ def guardar_ciclo(nuevo_registro: dict) -> bool:
 
     return True
 
-def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
+def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None) -> bool:
     df = get_historico()
     if df.empty:
         return False
@@ -201,20 +201,36 @@ def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
     nuevo_usdt_ganado = round(profit_base + nuevo_ajuste, 2)
     nuevo_pct = round((nuevo_usdt_ganado / capital * 100) if capital > 0 else 0.0, 2)
 
-    df.loc[idx, "Ajuste"] = round(nuevo_ajuste, 2)
-    df.loc[idx, "USDT_Ganado"] = nuevo_usdt_ganado
-    df.loc[idx, "Ganancia_Pct"] = nuevo_pct
-
-    df = df.drop(columns=["Ciclo_Num"])
+    datos = {
+        "Ajuste": round(nuevo_ajuste, 2),
+        "USDT_Ganado": nuevo_usdt_ganado,
+        "Ganancia_Pct": nuevo_pct,
+    }
+    if f_ini_str is not None:
+        datos["Fecha_Inicio"] = str(f_ini_str)
+    if f_fin_str is not None:
+        datos["Fecha_Fin"] = str(f_fin_str)
+    if f_hora_str is not None:
+        datos["Fecha_Hora"] = str(f_hora_str)
+    elif f_fin_str is not None:
+        datos["Fecha_Hora"] = str(f_fin_str)
 
     # 1. Guardar en PostgreSQL (db_manager)
     try:
         import db_manager
-        db_manager.db_actualizar_ajuste_ciclo(ciclo_num, nuevo_ajuste, nuevo_usdt_ganado, nuevo_pct)
+        db_manager.db_actualizar_ciclo_datos(ciclo_num, datos)
     except Exception:
         pass
 
-    # 2. Guardar copia local
+    # 2. Guardar copia local CSV
+    for col, val in datos.items():
+        if col in df.columns:
+            df.loc[idx, col] = val
+        else:
+            df[col] = None
+            df.loc[idx, col] = val
+
+    df = df.drop(columns=["Ciclo_Num"], errors="ignore")
     try:
         df.to_csv(DB_HISTORICO_FILE, index=False)
     except Exception:
@@ -231,6 +247,9 @@ def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
             return False
 
     return True
+
+def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
+    return actualizar_ciclo_ajuste_y_fechas(ciclo_num, nuevo_ajuste)
 
 def actualizar_ciclo_completo(ciclo_num: int, datos: dict) -> bool:
     # 1. Guardar en PostgreSQL (db_manager)

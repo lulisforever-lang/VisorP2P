@@ -51,15 +51,30 @@ def eliminar_ciclo_dialog(ciclo_data: dict):
         if st.button("Cancelar", use_container_width=True, key=f"dlg_btn_del_cancel_c_{c_num}"):
             st.rerun()
 
-@st.dialog("✏️ Reacomodar Ajuste de Ciclo")
-def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
+@st.dialog("✏️ Editar Ciclo")
+def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="", f_fin_val=""):
     profit_base = u_gan_actual - aj_actual
+    now_local = data_manager.get_now_local()
+
+    dt_ini_parsed = pd.to_datetime(f_ini_val, dayfirst=True, errors="coerce")
+    if pd.isna(dt_ini_parsed):
+        dt_ini_parsed = pd.to_datetime(f_h, dayfirst=True, errors="coerce")
+    if pd.isna(dt_ini_parsed):
+        dt_ini_parsed = pd.Timestamp(now_local)
+
+    dt_fin_parsed = pd.to_datetime(f_fin_val, dayfirst=True, errors="coerce")
+    if pd.isna(dt_fin_parsed):
+        dt_fin_parsed = pd.to_datetime(f_h, dayfirst=True, errors="coerce")
+    if pd.isna(dt_fin_parsed):
+        dt_fin_parsed = pd.Timestamp(now_local)
+
+    fechas_header = f"{f_ini_val} ➔ {f_fin_val}" if (f_ini_val and f_fin_val) else f_h
 
     st.markdown(f"""
     <div style="background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <strong style="color: #f0f6fc; font-size: 1.05rem;">Ciclo #{c_num}</strong>
-            <span style="color: #8b949e; font-size: 0.8rem;">🕒 {f_h}</span>
+            <span style="color: #8b949e; font-size: 0.8rem;">🕒 {fechas_header}</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #8b949e;">
             <span>Capital: <strong style="color: #e6edf3;">{cap:,.2f} USDT</strong></span>
@@ -70,6 +85,22 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    st.write("#### ⏱️ Modificar Horario del Ciclo")
+    c_ini_box, c_fin_box = st.columns(2)
+    with c_ini_box:
+        st.markdown("<div style='font-size:0.85rem; font-weight:600; color:#58a6ff; margin-bottom:4px;'>🟢 Inicio:</div>", unsafe_allow_html=True)
+        d_ini = st.date_input("Fecha Inicio:", value=dt_ini_parsed.date(), key=f"dlg_d_ini_{c_num}")
+        t_ini = st.time_input("Hora Inicio:", value=dt_ini_parsed.time().replace(second=0, microsecond=0), key=f"dlg_t_ini_{c_num}", step=60)
+    with c_fin_box:
+        st.markdown("<div style='font-size:0.85rem; font-weight:600; color:#58a6ff; margin-bottom:4px;'>🔴 Fin:</div>", unsafe_allow_html=True)
+        d_fin = st.date_input("Fecha Fin:", value=dt_fin_parsed.date(), key=f"dlg_d_fin_{c_num}")
+        t_fin = st.time_input("Hora Fin:", value=dt_fin_parsed.time().replace(second=0, microsecond=0), key=f"dlg_t_fin_{c_num}", step=60)
+
+    dt_ini_new = datetime.combine(d_ini, t_ini)
+    dt_fin_new = datetime.combine(d_fin, t_fin)
+
+    st.divider()
 
     st.write("#### ✍️ Modificar Ajuste")
     nuevo_ajuste = st.number_input(
@@ -106,11 +137,18 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
     c_s1, c_s2 = st.columns(2)
     with c_s1:
         if st.button("💾 Guardar Cambios", type="primary", use_container_width=True, key=f"btn_save_aj_{c_num}"):
-            if data_manager.actualizar_ajuste_ciclo(c_num, nuevo_ajuste):
-                st.toast(f"✅ Ciclo #{c_num} actualizado a {nuevo_ajuste:+.2f} USDT")
-                st.rerun()
+            if dt_ini_new >= dt_fin_new:
+                st.error("⚠️ La fecha y hora de inicio debe ser anterior a la de fin.")
             else:
-                st.error("Error al guardar el ajuste.")
+                str_ini = dt_ini_new.strftime("%d/%m/%Y %I:%M %p")
+                str_fin = dt_fin_new.strftime("%d/%m/%Y %I:%M %p")
+                str_hora = dt_fin_new.strftime("%d/%m/%Y %I:%M:%S %p")
+                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora):
+                    st.toast(f"✅ Ciclo #{c_num} actualizado exitosamente")
+                    time.sleep(0.4)
+                    st.rerun()
+                else:
+                    st.error("Error al guardar los cambios del ciclo.")
     with c_s2:
         if st.button("Cancelar", type="secondary", use_container_width=True, key=f"btn_cancel_aj_{c_num}"):
             st.rerun()
@@ -427,8 +465,8 @@ def render_vista():
                         </div>
                         """)
                     with col_ed:
-                        if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
-                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
+                        if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Editar Ciclo #{c_num}"):
+                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin)
                     with col_del:
                         if st.button("🗑️", key=f"btn_del_c_{c_num}", type="secondary", help=f"Eliminar Ciclo #{c_num}"):
                             eliminar_ciclo_dialog(r.to_dict())
@@ -442,5 +480,5 @@ def render_vista():
                         </div>
                         """)
                     with col_ed:
-                        if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
-                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
+                        if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Editar Ciclo #{c_num}"):
+                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin)
