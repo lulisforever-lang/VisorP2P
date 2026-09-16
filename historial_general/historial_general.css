@@ -289,7 +289,7 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) {
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    gap: 8px !important;
+    gap: 6px !important;
     width: 100% !important;
     border-top: 1px dashed #30363d !important;
     margin-top: 16px !important;
@@ -305,22 +305,22 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="co
     flex: 1 1 auto !important;
     width: auto !important;
     min-width: 0 !important;
-    max-width: calc(100% - 36px) !important;
+    max-width: calc(100% - 68px) !important;
     display: flex !important;
     align-items: center !important;
 }
 
-div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
-div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child,
-div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:last-child,
-div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
-div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child {
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child),
+div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:not(:first-child),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child) {
     flex: 0 0 28px !important;
     width: 28px !important;
     min-width: 28px !important;
     max-width: 28px !important;
     display: flex !important;
-    justify-content: flex-end !important;
+    justify-content: center !important;
     align-items: center !important;
 }
 
@@ -393,7 +393,7 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
         flex-wrap: nowrap !important;
         align-items: center !important;
         justify-content: space-between !important;
-        gap: 8px !important;
+        gap: 6px !important;
         border-top: 1px dashed #30363d !important;
         margin-top: 16px !important;
         padding-top: 10px !important;
@@ -406,19 +406,19 @@ div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) button:hover {
         flex: 1 1 auto !important;
         width: auto !important;
         min-width: 0 !important;
-        max-width: calc(100% - 36px) !important;
+        max-width: calc(100% - 68px) !important;
     }
-    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
-    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child,
-    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:last-child,
-    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:last-child,
-    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:last-child {
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child),
+    div[data-testid="stHorizontalBlock"]:has(.cycle-inner-ajuste-pill) > .stColumn:not(:first-child),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="stColumn"]:not(:first-child),
+    div[data-testid="stHorizontal"]:has(.cycle-inner-ajuste-pill) > [data-testid="column"]:not(:first-child) {
         flex: 0 0 28px !important;
         width: 28px !important;
         min-width: 28px !important;
         max-width: 28px !important;
         display: flex !important;
-        justify-content: flex-end !important;
+        justify-content: center !important;
         align-items: center !important;
     }
 }

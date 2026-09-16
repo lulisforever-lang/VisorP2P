@@ -179,6 +179,21 @@ def init_db():
             """)
             conn.commit()
 
+            # Backfill Fecha_Inicio y Fecha_Fin para ciclos históricos preexistentes
+            cur.execute("""
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '14/09/2026 07:00 AM', "Fecha_Fin" = '14/09/2026 09:30 AM' WHERE "Ciclo" = 1 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '14/09/2026 09:30 AM', "Fecha_Fin" = '14/09/2026 01:20 PM' WHERE "Ciclo" = 2 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '14/09/2026 01:20 PM', "Fecha_Fin" = '14/09/2026 03:30 PM' WHERE "Ciclo" = 3 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '15/09/2026 02:00 PM', "Fecha_Fin" = '15/09/2026 07:20 PM' WHERE "Ciclo" = 4 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '15/09/2026 07:00 AM', "Fecha_Fin" = '15/09/2026 09:20 AM' WHERE "Ciclo" = 5 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '16/09/2026 06:00 AM', "Fecha_Fin" = '16/09/2026 07:45 AM' WHERE "Ciclo" = 6 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '16/09/2026 07:45 AM', "Fecha_Fin" = '16/09/2026 10:30 AM' WHERE "Ciclo" = 7 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '16/09/2026 10:30 AM', "Fecha_Fin" = '16/09/2026 12:20 PM' WHERE "Ciclo" = 8 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '16/09/2026 12:20 PM', "Fecha_Fin" = '16/09/2026 02:00 PM' WHERE "Ciclo" = 9 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+                UPDATE historico_ciclos SET "Fecha_Inicio" = '16/09/2026 01:00 PM', "Fecha_Fin" = '16/09/2026 06:20 PM' WHERE "Ciclo" = 10 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');
+            """)
+            conn.commit()
+
         return True
     except Exception as e:
         print(f"Error inicializando base de datos: {e}")

@@ -418,29 +418,29 @@ def render_vista():
                 """)
 
                 if puede_eliminar:
-                    col_aj1, col_aj2, col_aj3 = st.columns([0.84, 0.08, 0.08])
-                    with col_aj1:
+                    col_aj, col_ed, col_del = st.columns([0.88, 0.06, 0.06])
+                    with col_aj:
                         st.html(f"""
                         <div class="cycle-inner-ajuste-pill">
                             <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
                             <strong style="color: {color_aj};">{texto_aj}</strong>
                         </div>
                         """)
-                    with col_aj2:
+                    with col_ed:
                         if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
                             editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
-                    with col_aj3:
+                    with col_del:
                         if st.button("🗑️", key=f"btn_del_c_{c_num}", type="secondary", help=f"Eliminar Ciclo #{c_num}"):
                             eliminar_ciclo_dialog(r.to_dict())
                 else:
-                    col_aj1, col_aj2 = st.columns([0.88, 0.12])
-                    with col_aj1:
+                    col_aj, col_ed = st.columns([0.94, 0.06])
+                    with col_aj:
                         st.html(f"""
                         <div class="cycle-inner-ajuste-pill">
                             <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
                             <strong style="color: {color_aj};">{texto_aj}</strong>
                         </div>
                         """)
-                    with col_aj2:
+                    with col_ed:
                         if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
                             editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)

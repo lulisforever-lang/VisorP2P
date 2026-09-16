@@ -269,25 +269,26 @@ def actualizar_ciclo_completo(ciclo_num: int, datos: dict) -> bool:
     return True
 
 def eliminar_ciclo(ciclo_num: int) -> bool:
+    exito = False
+
     # 1. Eliminar en PostgreSQL (db_manager)
     try:
         import db_manager
-        db_manager.db_eliminar_ciclo(ciclo_num)
+        if db_manager.db_eliminar_ciclo(ciclo_num):
+            exito = True
     except Exception:
         pass
 
     # 2. Eliminar en copia local CSV
-    df = get_historico()
-    if df.empty:
-        return False
-
-    mask = pd.to_numeric(df["Ciclo"], errors="coerce").fillna(0).astype(int) == int(ciclo_num)
-    if not mask.any():
-        return False
-
-    df = df[~mask]
     try:
-        df.to_csv(DB_HISTORICO_FILE, index=False)
+        if os.path.exists(DB_HISTORICO_FILE):
+            df_local = pd.read_csv(DB_HISTORICO_FILE)
+            if not df_local.empty and "Ciclo" in df_local.columns:
+                mask = pd.to_numeric(df_local["Ciclo"], errors="coerce").fillna(0).astype(int) == int(ciclo_num)
+                if mask.any():
+                    df_local = df_local[~mask]
+                    df_local.to_csv(DB_HISTORICO_FILE, index=False)
+                    exito = True
     except Exception:
         pass
 
@@ -295,11 +296,17 @@ def eliminar_ciclo(ciclo_num: int) -> bool:
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
-            conn.update(worksheet="historico_ciclos", data=df)
+            df_gs = conn.read(worksheet="historico_ciclos", ttl=0)
+            if df_gs is not None and not df_gs.empty and "Ciclo" in df_gs.columns:
+                mask = pd.to_numeric(df_gs["Ciclo"], errors="coerce").fillna(0).astype(int) == int(ciclo_num)
+                if mask.any():
+                    df_gs = df_gs[~mask]
+                    conn.update(worksheet="historico_ciclos", data=df_gs)
+                    exito = True
         except Exception:
             pass
 
-    return True
+    return exito
 
 # =======================================================================
 # OPERACIONES MANUALES / EXTERNAS (OTC)
