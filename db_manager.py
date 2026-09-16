@@ -179,6 +179,14 @@ def init_db():
             """)
             conn.commit()
 
+            # Ajuste de consistencia para el Ciclo 7 (Capital arbitrado exacto 19,800 USDT)
+            cur.execute("""
+                UPDATE historico_ciclos
+                SET "Capital" = 19800.0, "Ganancia_Pct" = 0.07
+                WHERE "Ciclo" = 7 AND "Capital" > 19800.0;
+            """)
+            conn.commit()
+
             # Backfill Fecha_Inicio y Fecha_Fin para ciclos históricos preexistentes
             cur.execute("""
                 UPDATE historico_ciclos SET "Fecha_Inicio" = '14/09/2026 07:00 AM', "Fecha_Fin" = '14/09/2026 09:30 AM' WHERE "Ciclo" = 1 AND ("Fecha_Inicio" IS NULL OR "Fecha_Inicio" = '');

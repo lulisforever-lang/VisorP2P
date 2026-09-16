@@ -180,7 +180,7 @@ def guardar_ciclo(nuevo_registro: dict) -> bool:
 
     return True
 
-def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None) -> bool:
+def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None, nuevo_capital: float = None) -> bool:
     df = get_historico()
     if df.empty:
         return False
@@ -194,7 +194,7 @@ def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_
 
     old_ajuste = float(pd.to_numeric(df.loc[idx, "Ajuste"], errors="coerce")) if pd.notnull(df.loc[idx, "Ajuste"]) else 0.0
     old_usdt_ganado = float(pd.to_numeric(df.loc[idx, "USDT_Ganado"], errors="coerce")) if pd.notnull(df.loc[idx, "USDT_Ganado"]) else 0.0
-    capital = float(pd.to_numeric(df.loc[idx, "Capital"], errors="coerce")) if pd.notnull(df.loc[idx, "Capital"]) else 0.0
+    capital = float(nuevo_capital) if (nuevo_capital is not None and nuevo_capital > 0) else (float(pd.to_numeric(df.loc[idx, "Capital"], errors="coerce")) if pd.notnull(df.loc[idx, "Capital"]) else 0.0)
 
     # Profit base del ciclo antes de ajustes
     profit_base = old_usdt_ganado - old_ajuste
@@ -206,6 +206,8 @@ def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_
         "USDT_Ganado": nuevo_usdt_ganado,
         "Ganancia_Pct": nuevo_pct,
     }
+    if nuevo_capital is not None and nuevo_capital > 0:
+        datos["Capital"] = round(capital, 2)
     if f_ini_str is not None:
         datos["Fecha_Inicio"] = str(f_ini_str)
     if f_fin_str is not None:

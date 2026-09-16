@@ -102,18 +102,30 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
 
     st.divider()
 
-    st.write("#### ✍️ Modificar Ajuste")
-    nuevo_ajuste = st.number_input(
-        "Nuevo valor de Ajuste USDT (+/-):",
-        value=float(aj_actual),
-        step=0.10,
-        format="%.2f",
-        key=f"input_modal_ajuste_hg_{c_num}",
-        help="Positivo si sobró dinero. Negativo si faltó enviar a un cliente o hubo algún gasto no reflejado."
-    )
+    st.write("#### 💰 Modificar Capital y Ajuste")
+    col_cap, col_aj = st.columns(2)
+    with col_cap:
+        nuevo_capital = st.number_input(
+            "Capital Operado (USDT):",
+            min_value=1.0,
+            value=float(cap),
+            step=100.0,
+            format="%.2f",
+            key=f"input_modal_cap_hg_{c_num}",
+            help="Capital en USDT correspondiente a este ciclo."
+        )
+    with col_aj:
+        nuevo_ajuste = st.number_input(
+            "Ajuste USDT (+/-):",
+            value=float(aj_actual),
+            step=0.10,
+            format="%.2f",
+            key=f"input_modal_ajuste_hg_{c_num}",
+            help="Positivo si sobró dinero. Negativo si faltó enviar a un cliente o hubo algún gasto no reflejado."
+        )
 
     nueva_ganancia = profit_base + nuevo_ajuste
-    nuevo_pct = (nueva_ganancia / cap * 100) if cap > 0 else 0.0
+    nuevo_pct = (nueva_ganancia / nuevo_capital * 100) if nuevo_capital > 0 else 0.0
     dif_ajuste = nuevo_ajuste - aj_actual
 
     color_res = "#3fb950" if nueva_ganancia >= 0 else "#f85149"
@@ -129,7 +141,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             <span class="{badge_cls}" style="margin-left: 8px; font-size: 0.82rem;">{sign_pct}{nuevo_pct:.2f}%</span>
         </div>
         <div style="font-size: 0.78rem; color: #8b949e; margin-top: 4px;">
-            Diferencia vs ajuste previo: <strong style="color: {'#3fb950' if dif_ajuste >= 0 else '#f85149'};">{dif_ajuste:+.2f} USDT</strong>
+            Capital: <strong style="color: #e6edf3;">{nuevo_capital:,.2f} USDT</strong> &bull; Diferencia vs ajuste previo: <strong style="color: {'#3fb950' if dif_ajuste >= 0 else '#f85149'};">{dif_ajuste:+.2f} USDT</strong>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -139,11 +151,13 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
         if st.button("💾 Guardar Cambios", type="primary", use_container_width=True, key=f"btn_save_aj_hg_{c_num}"):
             if dt_ini_new >= dt_fin_new:
                 st.error("⚠️ La fecha y hora de inicio debe ser anterior a la de fin.")
+            elif nuevo_capital <= 0:
+                st.error("⚠️ El capital debe ser un monto mayor a 0.")
             else:
                 str_ini = dt_ini_new.strftime("%d/%m/%Y %I:%M %p")
                 str_fin = dt_fin_new.strftime("%d/%m/%Y %I:%M %p")
                 str_hora = dt_fin_new.strftime("%d/%m/%Y %I:%M:%S %p")
-                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora):
+                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora, nuevo_capital):
                     st.toast(f"✅ Ciclo #{c_num} actualizado exitosamente")
                     time.sleep(0.4)
                     st.rerun()
