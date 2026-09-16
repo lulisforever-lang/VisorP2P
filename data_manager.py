@@ -28,7 +28,7 @@ def get_now_local() -> datetime:
 DB_HISTORICO_FILE = "historico_ciclos.csv"
 DB_MANUAL_FILE = "operaciones_manuales.csv"
 
-COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario"]
+COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario", "Fecha_Inicio", "Fecha_Fin"]
 COLUMNS_MANUAL = ["id", "Fecha_Hora", "tradeType", "amount", "unitPrice", "totalPrice", "commission", "fiat", "nota", "orderStatus", "Usuario"]
 
 def _tiene_gsheets_configurado():
@@ -229,6 +229,75 @@ def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
         except Exception as e:
             st.error(f"Error actualizando ciclo en Google Sheets: {e}")
             return False
+
+    return True
+
+def actualizar_ciclo_completo(ciclo_num: int, datos: dict) -> bool:
+    # 1. Guardar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_actualizar_ciclo_datos(ciclo_num, datos)
+    except Exception:
+        pass
+
+    # 2. Guardar copia local CSV
+    df = get_historico()
+    if df.empty:
+        return False
+
+    mask = pd.to_numeric(df["Ciclo"], errors="coerce").fillna(0).astype(int) == int(ciclo_num)
+    if not mask.any():
+        return False
+
+    for col, val in datos.items():
+        if col in df.columns:
+            df.loc[mask, col] = val
+
+    try:
+        df.to_csv(DB_HISTORICO_FILE, index=False)
+    except Exception:
+        pass
+
+    # 3. Guardar en Google Sheets si aplica
+    conn = _get_gsheets_connection()
+    if conn is not None:
+        try:
+            conn.update(worksheet="historico_ciclos", data=df)
+        except Exception:
+            pass
+
+    return True
+
+def eliminar_ciclo(ciclo_num: int) -> bool:
+    # 1. Eliminar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_eliminar_ciclo(ciclo_num)
+    except Exception:
+        pass
+
+    # 2. Eliminar en copia local CSV
+    df = get_historico()
+    if df.empty:
+        return False
+
+    mask = pd.to_numeric(df["Ciclo"], errors="coerce").fillna(0).astype(int) == int(ciclo_num)
+    if not mask.any():
+        return False
+
+    df = df[~mask]
+    try:
+        df.to_csv(DB_HISTORICO_FILE, index=False)
+    except Exception:
+        pass
+
+    # 3. Guardar en Google Sheets si aplica
+    conn = _get_gsheets_connection()
+    if conn is not None:
+        try:
+            conn.update(worksheet="historico_ciclos", data=df)
+        except Exception:
+            pass
 
     return True
 

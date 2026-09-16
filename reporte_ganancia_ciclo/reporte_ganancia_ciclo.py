@@ -193,27 +193,39 @@ def render_vista(api_key, api_secret):
                 df_b, df_s = pd.concat([bb, mb], ignore_index=True), pd.concat([bs, ms], ignore_index=True)
 
                 com_v = df_s["commission"].sum() if not df_s.empty else 0.0
-                com_tot = (df_b["commission"].sum() if not df_b.empty else 0.0) + com_v
+                com_b = df_b["commission"].sum() if not df_b.empty else 0.0
+                com_tot = com_b + com_v
 
+                # Compras (Entrada):
+                # u_comp es el USDT neto recibido en billetera (descontando comisiones si aplicaron)
                 u_comp = (df_b["amount"] - df_b["commission"]).sum() if not df_b.empty else 0.0
                 f_gast = df_b["totalPrice"].sum() if not df_b.empty else 0.0
                 f_nom = df_b["totalPrice_nominal"].sum() if not df_b.empty else 0.0
                 g_red_fiat = f_gast - f_nom
 
-                u_vend = df_s["amount"].sum() if not df_s.empty else 0.0
+                # Ventas (Salida):
+                # u_vend_nom es el USDT transferido al comprador
+                u_vend_nom = df_s["amount"].sum() if not df_s.empty else 0.0
                 f_rec = df_s["totalPrice"].sum() if not df_s.empty else 0.0
 
+                # u_vend_total es el USDT total que salió de la cuenta (al comprador + comisión Binance del vendedor)
+                u_vend_total = u_vend_nom + com_v
+
+                # Tasas Ponderadas Efectivas (Netas):
                 t_comp = (f_gast / u_comp) if u_comp > 0 else 0.0
-                t_vent = (f_rec / u_vend) if u_vend > 0 else 0.0
+                t_vent = (f_rec / u_vend_total) if u_vend_total > 0 else 0.0
+                t_vent_bruta = (f_rec / u_vend_nom) if u_vend_nom > 0 else 0.0
+
                 g_red_u = (g_red_fiat / t_comp) if t_comp > 0 else 0.0
-                cap_cic = min(u_comp, u_vend)
+                cap_cic = min(u_comp, u_vend_nom)
                 spread = ((t_vent - t_comp) / t_comp * 100) if t_comp > 0 else 0.0
 
                 if t_comp > 0 and cap_cic > 0:
+                    # Con cap_cic USDT vendidos a tasa efectiva t_vent, se obtiene fiat neto:
                     fiat_prop = cap_cic * t_vent
+                    # Con ese fiat se recompran USDT a tasa efectiva t_comp:
                     u_recomp = fiat_prop / t_comp
-                    ratio_v = cap_cic / u_vend if u_vend > 0 else 1
-                    profit_base = (u_recomp - cap_cic) - (com_v * ratio_v)
+                    profit_base = u_recomp - cap_cic
                     if st.session_state["cfg_descontar_redondeo"]:
                         profit_base -= g_red_u
                 else:
@@ -223,6 +235,7 @@ def render_vista(api_key, api_secret):
                     "dt_inicio_str": dt_inicio.strftime('%d/%m/%Y %I:%M %p'),
                     "dt_fin_str": dt_fin.strftime('%d/%m/%Y %I:%M %p'),
                     "t_vent": t_vent,
+                    "t_vent_bruta": t_vent_bruta,
                     "t_comp": t_comp,
                     "cap_cic": cap_cic,
                     "spread": spread,
@@ -273,7 +286,7 @@ def render_vista(api_key, api_secret):
 
         if btn_registrar:
             df_h = data_manager.get_historico()
-            nuevo_num_ciclo = len(df_h) + 1
+            nuevo_num_ciclo = (int(pd.to_numeric(df_h["Ciclo"], errors="coerce").max()) + 1) if (not df_h.empty and "Ciclo" in df_h.columns and pd.to_numeric(df_h["Ciclo"], errors="coerce").max() > 0) else 1
             com_pct = (rep["com_tot"] / rep["cap_cic"] * 100) if rep["cap_cic"] > 0 else 0.25
             
             nuevo_registro = {
@@ -286,7 +299,9 @@ def render_vista(api_key, api_secret):
                 "Ganancia_Pct": round(pct_ganancia_final, 2),
                 "USDT_Ganado": round(ganancia_final_ciclo, 2),
                 "Ajuste": round(ajuste_val, 2),
-                "Usuario": usr_registro
+                "Usuario": usr_registro,
+                "Fecha_Inicio": rep.get("dt_inicio_str", ""),
+                "Fecha_Fin": rep.get("dt_fin_str", "")
             }
             data_manager.guardar_ciclo(nuevo_registro)
             st.success(f"✅ Ciclo #{nuevo_num_ciclo} registrado para **{usr_registro}** con {ganancia_final_ciclo:+,.2f} USDT.")
@@ -296,18 +311,20 @@ def render_vista(api_key, api_secret):
 
         d1, d2, d3 = st.columns(3)
         with d1:
+            t_vb = rep.get('t_vent_bruta', rep['t_vent'])
+            sub_vent = f"Salida efectiva &bull; Bruta: {t_vb:,.3f} {FIAT_CURRENCY}" if abs(t_vb - rep['t_vent']) > 0.001 else "Salida efectiva por USDT"
             st.markdown(f"""
             <div class="metric-card metric-card-sell">
-                <div class="metric-label" style="color: #58a6ff;">Tasa Venta (Ponderada)</div>
+                <div class="metric-label" style="color: #58a6ff;">Tasa Venta (Efectiva)</div>
                 <div class="metric-value" style="color: #f0f6fc;">{rep['t_vent']:,.3f} <span style="font-size: 1rem; color: #8b949e;">{FIAT_CURRENCY}</span></div>
-                <div class="metric-sub">Salida efectiva por USDT</div>
+                <div class="metric-sub">{sub_vent}</div>
             </div>
             """, unsafe_allow_html=True)
 
         with d2:
             st.markdown(f"""
             <div class="metric-card metric-card-buy">
-                <div class="metric-label" style="color: #e3b341;">Tasa Compra (Ponderada)</div>
+                <div class="metric-label" style="color: #e3b341;">Tasa Compra (Efectiva)</div>
                 <div class="metric-value" style="color: #f0f6fc;">{rep['t_comp']:,.3f} <span style="font-size: 1rem; color: #8b949e;">{FIAT_CURRENCY}</span></div>
                 <div class="metric-sub">Entrada efectiva con redondeos</div>
             </div>
@@ -333,11 +350,12 @@ def render_vista(api_key, api_secret):
             """, unsafe_allow_html=True)
 
         with c2:
+            cls_spread = "badge-pill-pos" if rep['spread'] >= 0 else "badge-pill-neg"
             st.markdown(f"""
             <div class="metric-card">
                 <div class="metric-label">Margen de Spread</div>
                 <div class="metric-value">{rep['spread']:+.2f}%</div>
-                <span class="badge-pill-pos">Margen Bruto de Giro</span>
+                <span class="{cls_spread}">Margen Real de Giro</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -346,7 +364,7 @@ def render_vista(api_key, api_secret):
             <div class="metric-card">
                 <div class="metric-label">Comisiones Binance</div>
                 <div class="metric-value">{rep['com_tot']:.3f} <span style="font-size: 0.9rem; color: #8b949e;">USDT</span></div>
-                <div class="metric-sub">Retención en anuncios P2P</div>
+                <div class="metric-sub">Deducidas en tasas efectivas</div>
             </div>
             """, unsafe_allow_html=True)
 

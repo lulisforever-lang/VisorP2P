@@ -1,4 +1,5 @@
 import textwrap
+import time
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
@@ -6,6 +7,49 @@ import auth
 import data_manager
 
 FIAT_CURRENCY = "VES"
+
+@st.dialog("🗑️ Eliminar Ciclo")
+def eliminar_ciclo_dialog(ciclo_data: dict):
+    c_num = int(ciclo_data["Ciclo"])
+    st.warning(f"¿Estás seguro de que deseas eliminar permanentemente el **Ciclo #{c_num}**?")
+
+    f_h = str(ciclo_data.get("Fecha_Hora", ""))
+    f_ini = str(ciclo_data.get("Fecha_Inicio", "")).strip() if pd.notnull(ciclo_data.get("Fecha_Inicio")) and str(ciclo_data.get("Fecha_Inicio")).strip() not in ["", "None", "nan"] else ""
+    f_fin = str(ciclo_data.get("Fecha_Fin", "")).strip() if pd.notnull(ciclo_data.get("Fecha_Fin")) and str(ciclo_data.get("Fecha_Fin")).strip() not in ["", "None", "nan"] else ""
+    cap = float(ciclo_data.get("Capital", 0.0))
+    u_gan = float(ciclo_data.get("USDT_Ganado", 0.0))
+    pct = float(ciclo_data.get("Ganancia_Pct", 0.0))
+    t_v = float(ciclo_data.get("Tasa_Venta", 0.0))
+    t_c = float(ciclo_data.get("Tasa_Compra", 0.0))
+    usr = str(ciclo_data.get("Usuario", "Victoria"))
+
+    fechas_str = f"{f_ini} ➔ {f_fin}" if f_ini and f_fin else f_h
+
+    st.markdown(f"""
+    - **Ciclo:** `#{c_num}`
+    - **Operador:** `{usr}`
+    - **Período:** `{fechas_str}`
+    - **Capital:** `{cap:,.2f} USDT`
+    - **Tasa Venta:** `{t_v:,.3f} {FIAT_CURRENCY}`
+    - **Tasa Compra:** `{t_c:,.3f} {FIAT_CURRENCY}`
+    - **Ganancia:** `{u_gan:+,.2f} USDT ({pct:+.2f}%)`
+    """)
+    st.caption("⚠️ Esta acción no se puede deshacer y borrará el ciclo de la base de datos.")
+
+    col_del, col_cancel = st.columns([1, 1])
+    with col_del:
+        if st.button("Sí, Eliminar Ciclo 🗑️", type="primary", use_container_width=True, key=f"dlg_btn_del_c_hg_{c_num}"):
+            ok = data_manager.eliminar_ciclo(c_num)
+            if ok:
+                st.success(f"🗑️ Ciclo #{c_num} eliminado correctamente.")
+                time.sleep(0.4)
+                st.rerun()
+            else:
+                st.error("❌ Error al eliminar el ciclo.")
+
+    with col_cancel:
+        if st.button("Cancelar", use_container_width=True, key=f"dlg_btn_del_cancel_c_hg_{c_num}"):
+            st.rerun()
 
 @st.dialog("✏️ Reacomodar Ajuste de Ciclo")
 def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h):
@@ -312,6 +356,18 @@ def render_vista():
         usr_ciclo = str(r.get("Usuario", "Victoria"))
         badge_usr = f'<span class="cycle-badge" style="margin-left: 6px; background: #21262d; color: #58a6ff;">👤 {usr_ciclo}</span>' if es_admin else ""
 
+        f_ini = str(r.get("Fecha_Inicio", "")).strip() if pd.notnull(r.get("Fecha_Inicio")) and str(r.get("Fecha_Inicio")).strip() not in ["", "None", "nan"] else ""
+        f_fin = str(r.get("Fecha_Fin", "")).strip() if pd.notnull(r.get("Fecha_Fin")) and str(r.get("Fecha_Fin")).strip() not in ["", "None", "nan"] else ""
+
+        if f_ini and f_fin:
+            html_fechas = f'🕒 <span style="color:#8b949e;">Inicio:</span> <strong style="color:#e6edf3;">{f_ini}</strong> &nbsp;<span style="color:#58a6ff;">➔</span>&nbsp; <span style="color:#8b949e;">Fin:</span> <strong style="color:#e6edf3;">{f_fin}</strong>'
+        elif f_fin:
+            html_fechas = f'🕒 <span style="color:#8b949e;">Fin:</span> <strong style="color:#e6edf3;">{f_fin}</strong>'
+        else:
+            html_fechas = f'🕒 <strong style="color:#e6edf3;">{f_h}</strong>'
+
+        puede_eliminar = es_admin or (usr_ciclo.strip().lower() == usuario_activo.get("username", "").strip().lower())
+
         with st.container(border=True):
             st.html(f"""
             <div class="cycle-card-content {cls_pos_neg}">
@@ -323,7 +379,9 @@ def render_vista():
                     <div class="cycle-profit-text {cls_pos_neg}">{sign}{u_gan:,.2f} USDT</div>
                 </div>
                 <div class="cycle-mid-row">
-                    <div>🕒 {f_h}</div>
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                        {html_fechas}
+                    </div>
                     <span class="cycle-pct-badge {cls_pos_neg}">{sign_pct}{pct_g:.2f}%</span>
                 </div>
                 <div class="cycle-grid">
@@ -347,14 +405,30 @@ def render_vista():
             </div>
             """)
 
-            col_aj1, col_aj2 = st.columns([0.88, 0.12])
-            with col_aj1:
-                st.html(f"""
-                <div class="cycle-inner-ajuste-pill">
-                    <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
-                    <strong style="color: {color_aj};">{texto_aj}</strong>
-                </div>
-                """)
-            with col_aj2:
-                if st.button("✏️", key=f"btn_edit_aj_gen_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
-                    editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
+            if puede_eliminar:
+                col_aj1, col_aj2, col_aj3 = st.columns([0.84, 0.08, 0.08])
+                with col_aj1:
+                    st.html(f"""
+                    <div class="cycle-inner-ajuste-pill">
+                        <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
+                        <strong style="color: {color_aj};">{texto_aj}</strong>
+                    </div>
+                    """)
+                with col_aj2:
+                    if st.button("✏️", key=f"btn_edit_aj_gen_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
+                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)
+                with col_aj3:
+                    if st.button("🗑️", key=f"btn_del_c_hg_{c_num}", type="secondary", help=f"Eliminar Ciclo #{c_num}"):
+                        eliminar_ciclo_dialog(r.to_dict())
+            else:
+                col_aj1, col_aj2 = st.columns([0.88, 0.12])
+                with col_aj1:
+                    st.html(f"""
+                    <div class="cycle-inner-ajuste-pill">
+                        <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
+                        <strong style="color: {color_aj};">{texto_aj}</strong>
+                    </div>
+                    """)
+                with col_aj2:
+                    if st.button("✏️", key=f"btn_edit_aj_gen_{c_num}", type="secondary", help=f"Modificar ajuste del Ciclo #{c_num}"):
+                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h)

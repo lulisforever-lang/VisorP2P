@@ -93,6 +93,13 @@ def init_db():
             """)
             conn.commit()
 
+            # Migraciones de columnas adicionales en historico_ciclos
+            cur.execute("""
+                ALTER TABLE historico_ciclos ADD COLUMN IF NOT EXISTS "Fecha_Inicio" TEXT;
+                ALTER TABLE historico_ciclos ADD COLUMN IF NOT EXISTS "Fecha_Fin" TEXT;
+            """)
+            conn.commit()
+
             # Sembrar ciclos si la tabla está vacía
             cur.execute('SELECT COUNT(*) FROM historico_ciclos;')
             if cur.fetchone()[0] == 0:
@@ -164,6 +171,14 @@ def init_db():
                         ))
                     conn.commit()
 
+            # Ajuste de consistencia matemática para el Ciclo 10 (deducción correcta de comisión maker de venta)
+            cur.execute("""
+                UPDATE historico_ciclos
+                SET "Tasa_Venta" = 958.799, "USDT_Ganado" = 8.01, "Ganancia_Pct" = 0.05, "Comision_Pct" = 0.125
+                WHERE "Ciclo" = 10 AND "USDT_Ganado" = 23.45;
+            """)
+            conn.commit()
+
         return True
     except Exception as e:
         print(f"Error inicializando base de datos: {e}")
@@ -177,7 +192,7 @@ def db_get_historico():
         return None
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute('SELECT "Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario" FROM historico_ciclos ORDER BY "Ciclo" ASC;')
+            cur.execute('SELECT "Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario", "Fecha_Inicio", "Fecha_Fin" FROM historico_ciclos ORDER BY "Ciclo" ASC;')
             rows = cur.fetchall()
             return pd.DataFrame(rows)
     except Exception as e:
@@ -193,8 +208,8 @@ def db_guardar_ciclo(reg: dict) -> bool:
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO historico_ciclos ("Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario")
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                INSERT INTO historico_ciclos ("Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario", "Fecha_Inicio", "Fecha_Fin")
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
             """, (
                 str(reg.get("Fecha_Hora", "")),
                 int(reg.get("Ciclo", 0)),
@@ -205,7 +220,9 @@ def db_guardar_ciclo(reg: dict) -> bool:
                 float(reg.get("Ganancia_Pct", 0.0)),
                 float(reg.get("USDT_Ganado", 0.0)),
                 float(reg.get("Ajuste", 0.0)),
-                str(reg.get("Usuario", "Victoria"))
+                str(reg.get("Usuario", "Victoria")),
+                str(reg.get("Fecha_Inicio", "")) if reg.get("Fecha_Inicio") else "",
+                str(reg.get("Fecha_Fin", "")) if reg.get("Fecha_Fin") else ""
             ))
             conn.commit()
         return True
@@ -230,6 +247,43 @@ def db_actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float, nuevo_usdt: 
         return True
     except Exception as e:
         print(f"Error actualizando ajuste ciclo en DB: {e}")
+        return False
+    finally:
+        conn.close()
+
+def db_actualizar_ciclo_datos(ciclo_num: int, datos: dict) -> bool:
+    conn = get_connection()
+    if conn is None:
+        return False
+    try:
+        set_clauses = []
+        vals = []
+        for k, v in datos.items():
+            set_clauses.append(f'"{k}" = %s')
+            vals.append(v)
+        vals.append(int(ciclo_num))
+        query = f'UPDATE historico_ciclos SET {", ".join(set_clauses)} WHERE "Ciclo" = %s;'
+        with conn.cursor() as cur:
+            cur.execute(query, tuple(vals))
+            conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error actualizando ciclo en DB: {e}")
+        return False
+    finally:
+        conn.close()
+
+def db_eliminar_ciclo(ciclo_num: int) -> bool:
+    conn = get_connection()
+    if conn is None:
+        return False
+    try:
+        with conn.cursor() as cur:
+            cur.execute('DELETE FROM historico_ciclos WHERE "Ciclo" = %s;', (int(ciclo_num),))
+            conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error eliminando ciclo en DB: {e}")
         return False
     finally:
         conn.close()
