@@ -24,6 +24,16 @@ def check_pw(pw: str, stored_hash: str, stored_salt: str) -> bool:
     return calc_hash == stored_hash
 
 def get_usuarios_dict() -> dict:
+    # 1. Intentar PostgreSQL (db_manager)
+    try:
+        import db_manager
+        users_db = db_manager.db_get_usuarios()
+        if users_db:
+            return users_db
+    except Exception:
+        pass
+
+    # 2. Archivo local JSON
     if not USUARIOS_FILE.exists():
         # Inicialización de usuarios por defecto
         admin_h, admin_s = hash_pw("Metr!cas502*.")
@@ -54,6 +64,15 @@ def get_usuarios_dict() -> dict:
         return {}
 
 def guardar_usuarios_dict(data: dict) -> bool:
+    # 1. Guardar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        for k, u in data.items():
+            db_manager.db_guardar_usuario(k, u)
+    except Exception:
+        pass
+
+    # 2. Guardar copia local JSON
     try:
         with open(USUARIOS_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
@@ -123,6 +142,14 @@ def eliminar_usuario(username: str) -> tuple[bool, str]:
         return False, f"Usuario '{username}' no encontrado."
     if users[key].get("role") == "admin":
         return False, "No se puede eliminar la cuenta principal de Administrador."
+    
+    # 1. Eliminar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_eliminar_usuario(key)
+    except Exception:
+        pass
+
     del users[key]
     if guardar_usuarios_dict(users):
         return True, f"Usuario '{username}' eliminado correctamente."

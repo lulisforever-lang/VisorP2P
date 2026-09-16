@@ -53,6 +53,19 @@ def _get_gsheets_connection():
 # ======================================================================
 
 def get_historico() -> pd.DataFrame:
+    # 1. Intentar PostgreSQL (db_manager)
+    try:
+        import db_manager
+        df_db = db_manager.db_get_historico()
+        if df_db is not None and not df_db.empty:
+            for col in COLUMNS_HISTORICO:
+                if col not in df_db.columns:
+                    df_db[col] = None
+            return df_db
+    except Exception:
+        pass
+
+    # 2. Intentar Google Sheets
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
@@ -66,7 +79,7 @@ def get_historico() -> pd.DataFrame:
         except Exception:
             pass
 
-    # Fallback local
+    # 3. Fallback local
     if not os.path.exists(DB_HISTORICO_FILE):
         df_init = pd.DataFrame(columns=COLUMNS_HISTORICO)
         df_init.to_csv(DB_HISTORICO_FILE, index=False)
@@ -138,17 +151,24 @@ def guardar_ciclo(nuevo_registro: dict) -> bool:
             usr = st.session_state["usuario_activo"].get("username", "Victoria")
         nuevo_registro["Usuario"] = usr
 
+    # 1. Guardar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_guardar_ciclo(nuevo_registro)
+    except Exception:
+        pass
+
     df_actual = get_historico()
     nuevo_df = pd.DataFrame([nuevo_registro])
     df_actualizado = pd.concat([df_actual, nuevo_df], ignore_index=True)
 
-    # 1. Guardar copia local
+    # 2. Guardar copia local
     try:
         df_actualizado.to_csv(DB_HISTORICO_FILE, index=False)
     except Exception:
         pass
 
-    # 2. Guardar en Google Sheets
+    # 3. Guardar en Google Sheets
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
@@ -187,13 +207,20 @@ def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
 
     df = df.drop(columns=["Ciclo_Num"])
 
-    # 1. Guardar copia local
+    # 1. Guardar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_actualizar_ajuste_ciclo(ciclo_num, nuevo_ajuste, nuevo_usdt_ganado, nuevo_pct)
+    except Exception:
+        pass
+
+    # 2. Guardar copia local
     try:
         df.to_csv(DB_HISTORICO_FILE, index=False)
     except Exception:
         pass
 
-    # 2. Guardar en Google Sheets si aplica
+    # 3. Guardar en Google Sheets si aplica
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
@@ -210,6 +237,23 @@ def actualizar_ajuste_ciclo(ciclo_num: int, nuevo_ajuste: float) -> bool:
 # ======================================================================
 
 def get_todas_operaciones_manuales() -> pd.DataFrame:
+    # 1. Intentar PostgreSQL (db_manager)
+    try:
+        import db_manager
+        df_db = db_manager.db_get_operaciones_manuales()
+        if df_db is not None and not df_db.empty:
+            for col in COLUMNS_MANUAL:
+                if col not in df_db.columns:
+                    df_db[col] = None
+            if "Usuario" not in df_db.columns:
+                df_db["Usuario"] = "Victoria"
+            else:
+                df_db["Usuario"] = df_db["Usuario"].fillna("Victoria")
+            return df_db
+    except Exception:
+        pass
+
+    # 2. Intentar Google Sheets
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
@@ -219,10 +263,15 @@ def get_todas_operaciones_manuales() -> pd.DataFrame:
                 for col in COLUMNS_MANUAL:
                     if col not in df.columns:
                         df[col] = None
+                if "Usuario" not in df.columns:
+                    df["Usuario"] = "Victoria"
+                else:
+                    df["Usuario"] = df["Usuario"].fillna("Victoria")
                 return df
         except Exception:
             pass
 
+    # 3. Fallback local CSV
     if not os.path.exists(DB_MANUAL_FILE):
         df_init = pd.DataFrame(columns=COLUMNS_MANUAL)
         df_init.to_csv(DB_MANUAL_FILE, index=False)
@@ -257,17 +306,24 @@ def guardar_operacion_manual(nuevo_registro: dict) -> bool:
             usr = st.session_state["usuario_activo"].get("username", "Victoria")
         nuevo_registro["Usuario"] = usr
 
+    # 1. Guardar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_guardar_operacion_manual(nuevo_registro)
+    except Exception:
+        pass
+
     df_actual = get_todas_operaciones_manuales()
     nuevo_df = pd.DataFrame([nuevo_registro])
     df_actualizado = pd.concat([df_actual, nuevo_df], ignore_index=True)
 
-    # 1. Guardar copia local
+    # 2. Guardar copia local
     try:
         df_actualizado.to_csv(DB_MANUAL_FILE, index=False)
     except Exception:
         pass
 
-    # 2. Guardar en Google Sheets
+    # 3. Guardar en Google Sheets
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
@@ -280,6 +336,13 @@ def guardar_operacion_manual(nuevo_registro: dict) -> bool:
     return True
 
 def actualizar_operacion_manual(op_id: str, datos_actualizados: dict) -> bool:
+    # 1. Guardar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_actualizar_operacion_manual(op_id, datos_actualizados)
+    except Exception:
+        pass
+
     df = get_todas_operaciones_manuales()
     if df.empty:
         return False
@@ -292,13 +355,13 @@ def actualizar_operacion_manual(op_id: str, datos_actualizados: dict) -> bool:
         if col in df.columns:
             df.loc[mask, col] = val
 
-    # 1. Guardar copia local
+    # 2. Guardar copia local
     try:
         df.to_csv(DB_MANUAL_FILE, index=False)
     except Exception:
         pass
 
-    # 2. Guardar en Google Sheets
+    # 3. Guardar en Google Sheets
     conn = _get_gsheets_connection()
     if conn is not None:
         try:
@@ -311,6 +374,13 @@ def actualizar_operacion_manual(op_id: str, datos_actualizados: dict) -> bool:
     return True
 
 def eliminar_operacion_manual(op_id: str) -> bool:
+    # 1. Eliminar en PostgreSQL (db_manager)
+    try:
+        import db_manager
+        db_manager.db_eliminar_operacion_manual(op_id)
+    except Exception:
+        pass
+
     df = get_todas_operaciones_manuales()
     if df.empty:
         return False
@@ -321,13 +391,13 @@ def eliminar_operacion_manual(op_id: str) -> bool:
 
     df = df[~mask]
 
-    # 1. Guardar copia local
+    # 2. Guardar copia local
     try:
         df.to_csv(DB_MANUAL_FILE, index=False)
     except Exception:
         pass
 
-    # 2. Guardar en Google Sheets
+    # 3. Guardar en Google Sheets
     conn = _get_gsheets_connection()
     if conn is not None:
         try:

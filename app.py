@@ -7,6 +7,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 import importlib
+import db_manager
 import auth
 import data_manager
 from reporte_ganancia_ciclo import reporte_ganancia_ciclo as modulo_reporte
@@ -16,6 +17,7 @@ from operacion_externa import operacion_externa as modulo_operacion
 from ajustes import ajustes as modulo_ajustes
 
 # Forzar recarga de módulos en caliente para evitar caché de Python
+importlib.reload(db_manager)
 importlib.reload(auth)
 importlib.reload(data_manager)
 importlib.reload(modulo_reporte)
@@ -23,6 +25,12 @@ importlib.reload(modulo_historico)
 importlib.reload(modulo_historial_general)
 importlib.reload(modulo_operacion)
 importlib.reload(modulo_ajustes)
+
+# Inicializar base de datos PostgreSQL persistente si aplica
+try:
+    db_manager.init_db()
+except Exception:
+    pass
 
 # Localizar la ruta exacta del archivo .env en la misma carpeta de app.py
 BASE_DIR = Path(__file__).resolve().parent
