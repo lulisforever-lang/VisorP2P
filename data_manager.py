@@ -28,7 +28,7 @@ def get_now_local() -> datetime:
 DB_HISTORICO_FILE = "historico_ciclos.csv"
 DB_MANUAL_FILE = "operaciones_manuales.csv"
 
-COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Usuario", "Fecha_Inicio", "Fecha_Fin"]
+COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin"]
 COLUMNS_MANUAL = ["id", "Fecha_Hora", "tradeType", "amount", "unitPrice", "totalPrice", "commission", "fiat", "nota", "orderStatus", "Usuario"]
 
 def _tiene_gsheets_configurado():
@@ -97,9 +97,11 @@ def enriquecer_historico_fechas(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=COLUMNS_HISTORICO)
 
     df = df.copy()
-    for col in ["Capital", "Ganancia_Pct", "Ajuste", "USDT_Ganado", "Tasa_Venta", "Tasa_Compra", "Comision_Pct"]:
+    for col in ["Capital", "Ganancia_Pct", "Ajuste", "Retiro_Admin", "USDT_Ganado", "Tasa_Venta", "Tasa_Compra", "Comision_Pct"]:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+        else:
+            df[col] = 0.0
     if "Ciclo" in df.columns:
         df["Ciclo"] = pd.to_numeric(df["Ciclo"], errors="coerce").fillna(0).astype(int)
 
@@ -180,7 +182,7 @@ def guardar_ciclo(nuevo_registro: dict) -> bool:
 
     return True
 
-def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None, nuevo_capital: float = None) -> bool:
+def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None, nuevo_capital: float = None, nuevo_retiro_admin: float = None) -> bool:
     df = get_historico()
     if df.empty:
         return False
@@ -193,16 +195,19 @@ def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_
     idx = df[mask].index[0]
 
     old_ajuste = float(pd.to_numeric(df.loc[idx, "Ajuste"], errors="coerce")) if pd.notnull(df.loc[idx, "Ajuste"]) else 0.0
+    old_ret_adm = float(pd.to_numeric(df.loc[idx, "Retiro_Admin"], errors="coerce")) if ("Retiro_Admin" in df.columns and pd.notnull(df.loc[idx, "Retiro_Admin"])) else 0.0
     old_usdt_ganado = float(pd.to_numeric(df.loc[idx, "USDT_Ganado"], errors="coerce")) if pd.notnull(df.loc[idx, "USDT_Ganado"]) else 0.0
     capital = float(nuevo_capital) if (nuevo_capital is not None and nuevo_capital > 0) else (float(pd.to_numeric(df.loc[idx, "Capital"], errors="coerce")) if pd.notnull(df.loc[idx, "Capital"]) else 0.0)
 
-    # Profit base del ciclo antes de ajustes
-    profit_base = old_usdt_ganado - old_ajuste
-    nuevo_usdt_ganado = round(profit_base + nuevo_ajuste, 2)
+    # Profit base del ciclo antes de ajustes y retiros
+    profit_base = old_usdt_ganado - old_ajuste - old_ret_adm
+    ret_adm = float(nuevo_retiro_admin) if nuevo_retiro_admin is not None else old_ret_adm
+    nuevo_usdt_ganado = round(profit_base + nuevo_ajuste + ret_adm, 2)
     nuevo_pct = round((nuevo_usdt_ganado / capital * 100) if capital > 0 else 0.0, 2)
 
     datos = {
         "Ajuste": round(nuevo_ajuste, 2),
+        "Retiro_Admin": round(ret_adm, 2),
         "USDT_Ganado": nuevo_usdt_ganado,
         "Ganancia_Pct": nuevo_pct,
     }

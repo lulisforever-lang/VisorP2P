@@ -263,24 +263,28 @@ def render_vista(api_key, api_secret):
         else:
             usr_registro = usuario_activo["username"]
 
-        col_aj1, col_aj2, col_aj3 = st.columns([1.5, 2, 1.5])
+        col_aj1, col_aj2, col_aj3, col_aj4 = st.columns([1.2, 1.4, 1.8, 1.4])
         with col_aj1:
-            ajuste_val = st.number_input("Ajuste USDT (+/-):", value=0.00, step=0.10, format="%.2f")
+            ajuste_val = st.number_input("Ajuste USDT (+/-):", value=0.00, step=0.10, format="%.2f", help="Ajuste técnico por diferencias, redondeos o comisiones")
+        with col_aj2:
+            dinero_admin_val = st.number_input("Entregado a Admin (USDT):", value=0.00, step=0.10, format="%.2f", min_value=0.0, help="Monto entregado al administrador durante este ciclo (se suma para cuadre y se repone al final del día)")
 
-        ganancia_final_ciclo = rep["profit_base"] + ajuste_val
+        ganancia_final_ciclo = rep["profit_base"] + ajuste_val + dinero_admin_val
         pct_ganancia_final = (ganancia_final_ciclo / rep["cap_cic"] * 100) if rep["cap_cic"] > 0 else 0.0
 
-        with col_aj2:
+        with col_aj3:
             st.caption(f"Ganancia neta ({usr_registro}):")
             color_badge = "badge-pill-pos" if ganancia_final_ciclo >= 0 else "badge-pill-neg"
+            sub_info = f'<div style="font-size: 0.72rem; color: #e3b341; margin-top: 2px;">Incluye {dinero_admin_val:,.2f} USDT a reponer por Admin</div>' if dinero_admin_val > 0 else ''
             st.markdown(f"""
             <div style="font-size: 1.25rem; font-weight: 700; color: {'#3fb950' if ganancia_final_ciclo >= 0 else '#f85149'};">
                 {ganancia_final_ciclo:+,.2f} USDT
                 <span class="{color_badge}" style="margin-left: 8px;">{pct_ganancia_final:+.2f}%</span>
             </div>
+            {sub_info}
             """, unsafe_allow_html=True)
 
-        with col_aj3:
+        with col_aj4:
             st.write("")
             btn_registrar = st.button("📥 Registrar Ciclo", type="secondary", use_container_width=True)
 
@@ -299,6 +303,7 @@ def render_vista(api_key, api_secret):
                 "Ganancia_Pct": round(pct_ganancia_final, 2),
                 "USDT_Ganado": round(ganancia_final_ciclo, 2),
                 "Ajuste": round(ajuste_val, 2),
+                "Retiro_Admin": round(dinero_admin_val, 2),
                 "Usuario": usr_registro,
                 "Fecha_Inicio": rep.get("dt_inicio_str", ""),
                 "Fecha_Fin": rep.get("dt_fin_str", "")
@@ -331,11 +336,17 @@ def render_vista(api_key, api_secret):
             """, unsafe_allow_html=True)
 
         with d3:
+            detalles_sub = []
+            if ajuste_val != 0:
+                detalles_sub.append(f"Ajuste: {ajuste_val:+.2f}")
+            if dinero_admin_val > 0:
+                detalles_sub.append(f"Admin: +{dinero_admin_val:,.2f}")
+            sub_d3 = " &bull; ".join(detalles_sub) if detalles_sub else "Profit líquido del ciclo"
             st.markdown(f"""
             <div class="metric-card metric-card-profit">
                 <div class="metric-label" style="color: #3fb950;">Ganancia Neta Real</div>
                 <div class="metric-value" style="color: #3fb950;">{ganancia_final_ciclo:+,.2f} <span style="font-size: 1rem;">USDT</span></div>
-                <div class="metric-sub">{'Ajuste incluido: ' + f'{ajuste_val:+.2f} USDT' if ajuste_val != 0 else 'Profit líquido del ciclo'}</div>
+                <div class="metric-sub">{sub_d3}</div>
             </div>
             """, unsafe_allow_html=True)
 

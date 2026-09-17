@@ -52,8 +52,8 @@ def eliminar_ciclo_dialog(ciclo_data: dict):
             st.rerun()
 
 @st.dialog("✏️ Editar Ciclo")
-def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="", f_fin_val=""):
-    profit_base = u_gan_actual - aj_actual
+def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="", f_fin_val="", ret_admin_actual=0.0):
+    profit_base = u_gan_actual - aj_actual - ret_admin_actual
     now_local = data_manager.get_now_local()
 
     dt_ini_parsed = pd.to_datetime(f_ini_val, dayfirst=True, errors="coerce")
@@ -80,8 +80,9 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             <span>Capital: <strong style="color: #e6edf3;">{cap:,.2f} USDT</strong></span>
             <span>Profit Base: <strong style="color: #58a6ff;">{profit_base:,.2f} USDT</strong></span>
         </div>
-        <div style="margin-top: 6px; font-size: 0.85rem; color: #8b949e;">
-            Ajuste actual registrado: <strong style="color: {'#3fb950' if aj_actual >= 0 else '#f85149'};">{aj_actual:+.2f} USDT</strong>
+        <div style="margin-top: 6px; font-size: 0.85rem; color: #8b949e; display: flex; gap: 16px; flex-wrap: wrap;">
+            <span>Ajuste actual: <strong style="color: {'#3fb950' if aj_actual >= 0 else '#f85149'};">{aj_actual:+.2f} USDT</strong></span>
+            <span>Entregado a Admin: <strong style="color: #f59e0b;">{ret_admin_actual:,.2f} USDT</strong></span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -102,24 +103,37 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
 
     st.divider()
 
-    st.write("#### ✍️ Modificar Ajuste")
-    nuevo_ajuste = st.number_input(
-        "Nuevo valor de Ajuste USDT (+/-):",
-        value=float(aj_actual),
-        step=0.10,
-        format="%.2f",
-        key=f"input_modal_ajuste_{c_num}",
-        help="Positivo si sobró dinero. Negativo si faltó enviar a un cliente o hubo algún gasto no reflejado."
-    )
+    st.write("#### ✍️ Modificar Ajuste y Dinero a Admin")
+    c_e1, c_e2 = st.columns(2)
+    with c_e1:
+        nuevo_ajuste = st.number_input(
+            "Ajuste USDT (+/-):",
+            value=float(aj_actual),
+            step=0.10,
+            format="%.2f",
+            key=f"input_modal_ajuste_{c_num}",
+            help="Positivo si sobró dinero. Negativo si faltó enviar a un cliente o hubo algún gasto no reflejado."
+        )
+    with c_e2:
+        nuevo_ret_adm = st.number_input(
+            "Entregado a Admin (USDT):",
+            value=float(ret_admin_actual),
+            step=0.10,
+            format="%.2f",
+            min_value=0.0,
+            key=f"input_modal_ret_adm_{c_num}",
+            help="Dinero entregado al administrador durante este ciclo a reponer al final del día."
+        )
 
-    nueva_ganancia = profit_base + nuevo_ajuste
+    nueva_ganancia = profit_base + nuevo_ajuste + nuevo_ret_adm
     nuevo_pct = (nueva_ganancia / cap * 100) if cap > 0 else 0.0
-    dif_ajuste = nuevo_ajuste - aj_actual
+    dif_total = (nuevo_ajuste + nuevo_ret_adm) - (aj_actual + ret_admin_actual)
 
     color_res = "#3fb950" if nueva_ganancia >= 0 else "#f85149"
     badge_cls = "badge-pill-pos" if nueva_ganancia >= 0 else "badge-pill-neg"
     sign_n = "+" if nueva_ganancia >= 0 else ""
     sign_pct = "+" if nuevo_pct >= 0 else ""
+    sub_info_adm = f'<div style="font-size: 0.78rem; color: #f59e0b; margin-top: 4px;">👤 Incluye {nuevo_ret_adm:,.2f} USDT a reponer por Admin</div>' if nuevo_ret_adm > 0 else ''
 
     st.caption("Previsualización de la ganancia recalculada:")
     st.markdown(f"""
@@ -128,8 +142,9 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             {sign_n}{nueva_ganancia:,.2f} USDT
             <span class="{badge_cls}" style="margin-left: 8px; font-size: 0.82rem;">{sign_pct}{nuevo_pct:.2f}%</span>
         </div>
+        {sub_info_adm}
         <div style="font-size: 0.78rem; color: #8b949e; margin-top: 4px;">
-            Diferencia vs ajuste previo: <strong style="color: {'#3fb950' if dif_ajuste >= 0 else '#f85149'};">{dif_ajuste:+.2f} USDT</strong>
+            Diferencia vs previo: <strong style="color: {'#3fb950' if dif_total >= 0 else '#f85149'};">{dif_total:+.2f} USDT</strong>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -143,7 +158,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
                 str_ini = dt_ini_new.strftime("%d/%m/%Y %I:%M %p")
                 str_fin = dt_fin_new.strftime("%d/%m/%Y %I:%M %p")
                 str_hora = dt_fin_new.strftime("%d/%m/%Y %I:%M:%S %p")
-                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora):
+                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora, nuevo_retiro_admin=nuevo_ret_adm):
                     st.toast(f"✅ Ciclo #{c_num} actualizado exitosamente")
                     time.sleep(0.4)
                     st.rerun()
@@ -399,16 +414,19 @@ def render_vista():
         df_cards = df_hist.sort_values("Ciclo", ascending=False)
         if filtro_dia:
             df_cards = df_cards[df_cards["Dia_Semana"] == filtro_dia]
+            tot_ret_dia = df_cards["Retiro_Admin"].sum() if ("Retiro_Admin" in df_cards.columns and not df_cards.empty) else 0.0
 
             col_fb1, col_fb2 = st.columns([0.76, 0.24])
             with col_fb1:
                 gan_f = df_cards["USDT_Ganado"].sum() if not df_cards.empty else 0.0
                 cls_p = "has-profit" if gan_f > 0 else ""
+                html_ret_dia = f'<span style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.45); padding: 2px 8px; border-radius: 4px; color: #f59e0b; font-weight: 700; margin-left: 10px; font-size: 0.80rem;">⚠️ Total a reponer hoy por Admin: {tot_ret_dia:,.2f} USDT</span>' if tot_ret_dia > 0 else ''
                 st.html(f"""
                 <div class="filtro-activo-bar {cls_p}">
                     <div class="filtro-activo-text">
                         📅 Mostrando ciclos de: <strong style="color: #58a6ff;">{filtro_dia}</strong>
                         <span style="color: #8b949e; font-size: 0.82rem; margin-left: 6px;">({len(df_cards)} {'ciclo' if len(df_cards) == 1 else 'ciclos'})</span>
+                        {html_ret_dia}
                     </div>
                 </div>
                 """)
@@ -430,6 +448,7 @@ def render_vista():
             t_c = float(r["Tasa_Compra"])
             com = float(r["Comision_Pct"])
             aj = float(r.get("Ajuste", 0.0))
+            ret_adm = float(r.get("Retiro_Admin", 0.0))
 
             cls_pos_neg = "pos" if u_gan >= 0 else "neg"
             sign = "+" if u_gan >= 0 else ""
@@ -451,6 +470,8 @@ def render_vista():
                 html_fechas = f'🕒 <strong style="color:#e6edf3;">{f_h}</strong>'
 
             puede_eliminar = es_admin or (usr_ciclo.strip().lower() == usuario_activo.get("username", "").strip().lower())
+
+            pill_ret_admin = f'<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; display: inline-flex; align-items: center;"><span style="color: #f59e0b; font-weight: 600;">👤 Entregado a Admin:</span> <strong style="color: #f59e0b; margin-left: 4px;">+{ret_adm:,.2f} USDT</strong></div>' if ret_adm > 0 else ''
 
             with st.container(border=True):
                 st.html(f"""
@@ -493,14 +514,17 @@ def render_vista():
                     col_aj, col_ed, col_del = st.columns([0.88, 0.06, 0.06])
                     with col_aj:
                         st.html(f"""
-                        <div class="cycle-inner-ajuste-pill">
-                            <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
-                            <strong style="color: {color_aj};">{texto_aj}</strong>
+                        <div class="cycle-inner-ajuste-pill" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
+                                <strong style="color: {color_aj};">{texto_aj}</strong>
+                            </div>
+                            {pill_ret_admin}
                         </div>
                         """)
                     with col_ed:
                         if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Editar Ciclo #{c_num}"):
-                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin)
+                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin, ret_admin_actual=ret_adm)
                     with col_del:
                         if st.button("🗑️", key=f"btn_del_c_{c_num}", type="secondary", help=f"Eliminar Ciclo #{c_num}"):
                             eliminar_ciclo_dialog(r.to_dict())
@@ -508,11 +532,14 @@ def render_vista():
                     col_aj, col_ed = st.columns([0.94, 0.06])
                     with col_aj:
                         st.html(f"""
-                        <div class="cycle-inner-ajuste-pill">
-                            <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
-                            <strong style="color: {color_aj};">{texto_aj}</strong>
+                        <div class="cycle-inner-ajuste-pill" style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                            <div>
+                                <span style="color: #8b949e;">⚙️ Ajuste manual:</span>
+                                <strong style="color: {color_aj};">{texto_aj}</strong>
+                            </div>
+                            {pill_ret_admin}
                         </div>
                         """)
                     with col_ed:
                         if st.button("✏️", key=f"btn_edit_aj_{c_num}", type="secondary", help=f"Editar Ciclo #{c_num}"):
-                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin)
+                            editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin, ret_admin_actual=ret_adm)
