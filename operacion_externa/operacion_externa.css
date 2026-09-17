@@ -57,6 +57,188 @@
 }
 
 /* ==========================================================================
+   RESUMEN DIARIO DE LA SEMANA (LUNES A DOMINGO)
+   ========================================================================== */
+.days-grid-container {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+    margin-bottom: 22px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.metric-day-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer !important;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+.metric-day-card:hover {
+    border-color: #58a6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+}
+
+.metric-day-card:active {
+    transform: scale(0.96) !important;
+}
+
+.metric-day-card.has-profit {
+    border: 1px solid rgba(63, 185, 80, 0.5);
+    background: linear-gradient(145deg, #132418 0%, #161b22 100%);
+    box-shadow: 0 4px 12px rgba(63, 185, 80, 0.15);
+}
+
+/* Estado seleccionado / activo al filtrar por este día */
+.metric-day-card.is-selected {
+    border: 2px solid #58a6ff !important;
+    background: linear-gradient(145deg, #12243a 0%, #161b22 100%) !important;
+    box-shadow: 0 0 16px rgba(88, 166, 255, 0.45) !important;
+    transform: translateY(-2px);
+}
+
+.metric-day-card.has-profit.is-selected {
+    border: 2px solid #3fb950 !important;
+    background: linear-gradient(145deg, #132e1c 0%, #161b22 100%) !important;
+    box-shadow: 0 0 16px rgba(63, 185, 80, 0.45) !important;
+    transform: translateY(-2px);
+}
+
+.metric-day-card.is-selected .metric-day-header::after {
+    content: " 🟢";
+    font-size: 0.60rem;
+    vertical-align: middle;
+}
+
+/* Barra de aviso de filtro activo */
+.filtro-activo-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-left: 4px solid #58a6ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.filtro-activo-bar.has-profit {
+    border-left-color: #3fb950;
+}
+
+.filtro-activo-text {
+    font-size: 0.88rem;
+    color: #f0f6fc;
+}
+
+.metric-day-header {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #8b949e;
+    margin-bottom: 6px;
+}
+
+.metric-day-card.has-profit .metric-day-header {
+    color: #7ee787;
+}
+
+.metric-day-val {
+    font-size: 1.18rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+
+.metric-day-header,
+.metric-day-val,
+.metric-day-sub {
+    pointer-events: none !important;
+}
+
+.metric-day-sub {
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: #8b949e;
+}
+
+/* Ocultar botones técnicos de filtro de días de forma instantánea */
+div[data-testid="stElementContainer"]:has(button[title*="tecnico_filtro"]),
+div[data-testid="stElementContainer"]:has(button[aria-label*="tecnico_filtro"]),
+div[class*="st-key-btn_flt_op_day_"],
+button[title*="tecnico_filtro"],
+button[aria-label*="tecnico_filtro"] {
+    position: fixed !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-height: 0 !important;
+    opacity: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    z-index: -9999 !important;
+}
+
+/* Responsividad para los 7 días de la semana */
+@media (max-width: 1100px) {
+    .days-grid-container {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        row-gap: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .days-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        row-gap: 12px;
+        margin-bottom: 20px;
+    }
+    .metric-day-card {
+        padding: 14px 10px;
+    }
+    .metric-day-val {
+        font-size: 1.25rem;
+    }
+    .metric-day-card:last-child {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 340px) {
+    .days-grid-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        row-gap: 10px;
+    }
+    .metric-day-card:last-child {
+        grid-column: span 1;
+    }
+}
+
+/* ==========================================================================
    TARJETAS RESPONSIVAS DE OPERACIONES EXTERNAS (CONTENEDOR UNIFICADO)
    ========================================================================== */
 div[data-testid="stVerticalBlock"]:has(> div[data-testid="stElementContainer"] .cycle-card-content) {

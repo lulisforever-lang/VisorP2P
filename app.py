@@ -111,7 +111,7 @@ def desactivar_teclado_virtual():
                 });
 
                 // 3. Ocultar de forma segura fuera de pantalla los botones técnicos de filtro (Filtro_Lunes, etc.) sin anular eventos
-                const filterContainers = pDoc.querySelectorAll('div[class*="st-key-btn_flt_day_"]');
+                const filterContainers = pDoc.querySelectorAll('div[class*="st-key-btn_flt_day_"], div[class*="st-key-btn_flt_op_day_"]');
                 filterContainers.forEach(el => {
                     el.style.setProperty('position', 'fixed', 'important');
                     el.style.setProperty('top', '-9999px', 'important');
@@ -286,6 +286,8 @@ with st.sidebar:
                 st.session_state["vista_actual"] = nombre
                 if nombre == "Histórico Semanal":
                     st.session_state["filtro_dia_semana"] = None
+                elif nombre == "Registrar Operación Externa":
+                    st.session_state["filtro_dia_op_ext"] = None
             st.rerun()
 
     st.write("")

@@ -138,6 +138,53 @@ def enriquecer_historico_fechas(df: pd.DataFrame) -> pd.DataFrame:
     df["Anio"] = df["DT_Parsed"].apply(lambda dt: int(dt.year) if pd.notnull(dt) else 0)
     return df
 
+def enriquecer_operaciones_fechas(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Enriquece el DataFrame de operaciones manuales con conversiones numéricas y temporales
+    (Día de la semana, Semana Lun-Dom, Fechas parseadas).
+    """
+    if df is None or df.empty or "Fecha_Hora" not in df.columns:
+        return pd.DataFrame()
+
+    df = df.copy()
+    for col in ["amount", "unitPrice", "totalPrice", "commission"]:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+        else:
+            df[col] = 0.0
+
+    df["DT_Parsed"] = pd.to_datetime(df["Fecha_Hora"], errors="coerce")
+    mask_nat = df["DT_Parsed"].isna()
+    if mask_nat.any():
+        df.loc[mask_nat, "DT_Parsed"] = pd.to_datetime(df.loc[mask_nat, "Fecha_Hora"], dayfirst=True, errors="coerce")
+
+    df["Fecha_Date"] = df["DT_Parsed"].dt.date
+
+    nombres_dias = {0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo"}
+    df["Dia_Semana"] = df["DT_Parsed"].dt.dayofweek.map(nombres_dias)
+
+    # Inicio (Lunes) y Fin (Domingo) de la semana
+    df["Lunes_Semana"] = df["DT_Parsed"].apply(
+        lambda dt: (dt.date() - timedelta(days=dt.weekday())) if pd.notnull(dt) else None
+    )
+    df["Domingo_Semana"] = df["Lunes_Semana"].apply(
+        lambda lun: (lun + timedelta(days=6)) if lun else None
+    )
+    df["Semana_Key"] = df["Lunes_Semana"].apply(
+        lambda lun: lun.strftime("%Y-%m-%d") if lun else "sin-fecha"
+    )
+    df["Semana_Label"] = df.apply(
+        lambda r: f"Semana del {r['Lunes_Semana'].strftime('%d/%m/%Y')} al {r['Domingo_Semana'].strftime('%d/%m/%Y')}" if r['Lunes_Semana'] else "Sin Fecha",
+        axis=1
+    )
+
+    if "Usuario" not in df.columns:
+        df["Usuario"] = "Victoria"
+    else:
+        df["Usuario"] = df["Usuario"].fillna("Victoria").replace("", "Victoria")
+
+    return df
+
 def get_rango_semana_actual() -> tuple:
     """Devuelve (lunes_date, domingo_date, etiqueta_str) para la semana de hoy."""
     now = get_now_local().date()
