@@ -70,7 +70,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
 
     fechas_header = f"{f_ini_val} ➔ {f_fin_val}" if (f_ini_val and f_fin_val) else f_h
 
-    st.markdown(f"""
+    st.html(f"""
     <div style="background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <strong style="color: #f0f6fc; font-size: 1.05rem;">Ciclo #{c_num}</strong>
@@ -85,7 +85,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             <span>Entregado a Admin: <strong style="color: #f59e0b;">{ret_admin_actual:,.2f} USDT</strong></span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     st.write("#### ⏱️ Modificar Horario del Ciclo")
     c_ini_box, c_fin_box = st.columns(2)
@@ -136,7 +136,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
     sub_info_adm = f'<div style="font-size: 0.78rem; color: #f59e0b; margin-top: 4px;">👤 Entregado a Admin: {nuevo_ret_adm:,.2f} USDT (a reponer hoy, no altera la ganancia)</div>' if nuevo_ret_adm > 0 else ''
 
     st.caption("Previsualización de la ganancia recalculada:")
-    st.markdown(f"""
+    st.html(f"""
     <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
         <div style="font-size: 1.25rem; font-weight: 700; color: {color_res};">
             {sign_n}{nueva_ganancia:,.2f} USDT
@@ -147,7 +147,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             Diferencia vs previo: <strong style="color: {'#3fb950' if dif_total >= 0 else '#f85149'};">{dif_total:+.2f} USDT</strong>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
     c_s1, c_s2 = st.columns(2)
     with c_s1:

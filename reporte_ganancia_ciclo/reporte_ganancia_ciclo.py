@@ -283,13 +283,13 @@ def render_vista(api_key, api_secret):
             st.caption(f"Ganancia neta ({usr_registro}):")
             color_badge = "badge-pill-pos" if ganancia_final_ciclo >= 0 else "badge-pill-neg"
             sub_info = f'<div style="font-size: 0.72rem; color: #f59e0b; margin-top: 2px;">👤 Entregado a Admin: {dinero_admin_val:,.2f} USDT (a reponer hoy, no altera la ganancia)</div>' if dinero_admin_val > 0 else ''
-            st.markdown(f"""
+            st.html(f"""
             <div style="font-size: 1.25rem; font-weight: 700; color: {'#3fb950' if ganancia_final_ciclo >= 0 else '#f85149'};">
                 {ganancia_final_ciclo:+,.2f} USDT
                 <span class="{color_badge}" style="margin-left: 8px;">{pct_ganancia_final:+.2f}%</span>
             </div>
             {sub_info}
-            """, unsafe_allow_html=True)
+            """)
 
         with col_aj4:
             st.write("")
