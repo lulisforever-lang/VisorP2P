@@ -267,15 +267,22 @@ def render_vista(api_key, api_secret):
         with col_aj1:
             ajuste_val = st.number_input("Ajuste USDT (+/-):", value=0.00, step=0.10, format="%.2f", help="Ajuste técnico por diferencias, redondeos o comisiones")
         with col_aj2:
-            dinero_admin_val = st.number_input("Entregado a Admin (USDT):", value=0.00, step=0.10, format="%.2f", min_value=0.0, help="Monto entregado al administrador durante este ciclo (se suma para cuadre y se repone al final del día)")
+            dinero_admin_val = st.number_input(
+                "Entregado a Admin (USDT):",
+                value=0.00,
+                step=0.10,
+                format="%.2f",
+                min_value=0.0,
+                help="Monto en USDT entregado al administrador durante este ciclo. Queda registrado como rastro de caja para reponerlo al final del día, SIN alterar la ganancia del ciclo."
+            )
 
-        ganancia_final_ciclo = rep["profit_base"] + ajuste_val + dinero_admin_val
+        ganancia_final_ciclo = rep["profit_base"] + ajuste_val
         pct_ganancia_final = (ganancia_final_ciclo / rep["cap_cic"] * 100) if rep["cap_cic"] > 0 else 0.0
 
         with col_aj3:
             st.caption(f"Ganancia neta ({usr_registro}):")
             color_badge = "badge-pill-pos" if ganancia_final_ciclo >= 0 else "badge-pill-neg"
-            sub_info = f'<div style="font-size: 0.72rem; color: #e3b341; margin-top: 2px;">Incluye {dinero_admin_val:,.2f} USDT a reponer por Admin</div>' if dinero_admin_val > 0 else ''
+            sub_info = f'<div style="font-size: 0.72rem; color: #f59e0b; margin-top: 2px;">👤 Entregado a Admin: {dinero_admin_val:,.2f} USDT (a reponer hoy, no altera la ganancia)</div>' if dinero_admin_val > 0 else ''
             st.markdown(f"""
             <div style="font-size: 1.25rem; font-weight: 700; color: {'#3fb950' if ganancia_final_ciclo >= 0 else '#f85149'};">
                 {ganancia_final_ciclo:+,.2f} USDT

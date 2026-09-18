@@ -53,7 +53,7 @@ def eliminar_ciclo_dialog(ciclo_data: dict):
 
 @st.dialog("✏️ Editar Ciclo")
 def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="", f_fin_val="", ret_admin_actual=0.0):
-    profit_base = u_gan_actual - aj_actual - ret_admin_actual
+    profit_base = u_gan_actual - aj_actual
     now_local = data_manager.get_now_local()
 
     dt_ini_parsed = pd.to_datetime(f_ini_val, dayfirst=True, errors="coerce")
@@ -125,15 +125,15 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             help="Dinero entregado al administrador durante este ciclo a reponer al final del día."
         )
 
-    nueva_ganancia = profit_base + nuevo_ajuste + nuevo_ret_adm
+    nueva_ganancia = profit_base + nuevo_ajuste
     nuevo_pct = (nueva_ganancia / cap * 100) if cap > 0 else 0.0
-    dif_total = (nuevo_ajuste + nuevo_ret_adm) - (aj_actual + ret_admin_actual)
+    dif_total = nuevo_ajuste - aj_actual
 
     color_res = "#3fb950" if nueva_ganancia >= 0 else "#f85149"
     badge_cls = "badge-pill-pos" if nueva_ganancia >= 0 else "badge-pill-neg"
     sign_n = "+" if nueva_ganancia >= 0 else ""
     sign_pct = "+" if nuevo_pct >= 0 else ""
-    sub_info_adm = f'<div style="font-size: 0.78rem; color: #f59e0b; margin-top: 4px;">👤 Incluye {nuevo_ret_adm:,.2f} USDT a reponer por Admin</div>' if nuevo_ret_adm > 0 else ''
+    sub_info_adm = f'<div style="font-size: 0.78rem; color: #f59e0b; margin-top: 4px;">👤 Entregado a Admin: {nuevo_ret_adm:,.2f} USDT (a reponer hoy, no altera la ganancia)</div>' if nuevo_ret_adm > 0 else ''
 
     st.caption("Previsualización de la ganancia recalculada:")
     st.markdown(f"""
@@ -422,7 +422,7 @@ def render_vista():
 
         puede_eliminar = es_admin or (usr_ciclo.strip().lower() == usuario_activo.get("username", "").strip().lower())
 
-        pill_ret_admin = f'<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; display: inline-flex; align-items: center;"><span style="color: #f59e0b; font-weight: 600;">👤 Entregado a Admin:</span> <strong style="color: #f59e0b; margin-left: 4px;">+{ret_adm:,.2f} USDT</strong></div>' if ret_adm > 0 else ''
+        pill_ret_admin = f'<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; display: inline-flex; align-items: center;"><span style="color: #f59e0b; font-weight: 600;">👤 Entregado a Admin:</span> <strong style="color: #f59e0b; margin-left: 4px;">{ret_adm:,.2f} USDT</strong></div>' if ret_adm > 0 else ''
 
         with st.container(border=True):
             st.html(f"""

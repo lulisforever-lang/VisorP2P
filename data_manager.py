@@ -246,10 +246,10 @@ def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_
     old_usdt_ganado = float(pd.to_numeric(df.loc[idx, "USDT_Ganado"], errors="coerce")) if pd.notnull(df.loc[idx, "USDT_Ganado"]) else 0.0
     capital = float(nuevo_capital) if (nuevo_capital is not None and nuevo_capital > 0) else (float(pd.to_numeric(df.loc[idx, "Capital"], errors="coerce")) if pd.notnull(df.loc[idx, "Capital"]) else 0.0)
 
-    # Profit base del ciclo antes de ajustes y retiros
-    profit_base = old_usdt_ganado - old_ajuste - old_ret_adm
+    # Profit base del ciclo antes de ajustes técnicos
+    profit_base = old_usdt_ganado - old_ajuste
     ret_adm = float(nuevo_retiro_admin) if nuevo_retiro_admin is not None else old_ret_adm
-    nuevo_usdt_ganado = round(profit_base + nuevo_ajuste + ret_adm, 2)
+    nuevo_usdt_ganado = round(profit_base + nuevo_ajuste, 2)
     nuevo_pct = round((nuevo_usdt_ganado / capital * 100) if capital > 0 else 0.0, 2)
 
     datos = {
