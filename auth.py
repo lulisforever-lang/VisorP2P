@@ -171,13 +171,31 @@ def listar_usuarios() -> list[dict]:
     return res
 
 SESSION_DURATION_SECONDS = 7 * 60   # 7 minutos de inactividad
-SESSION_RENEW_THRESHOLD = 3 * 60    # Renovar si quedan menos de 3 minutos
+SESSION_RENEW_THRESHOLD = 5 * 60    # Renovar si han pasado al menos 2 minutos (quedan menos de 5 min)
 SECRET_FILE = BASE_DIR / ".session_secret"
 
 def _get_secret_key() -> str:
+    # 1. Variable de entorno explícita
     sec = os.getenv("SESSION_SECRET")
     if sec:
-        return sec
+        return str(sec).strip()
+    # 2. Streamlit secrets
+    try:
+        if hasattr(st, "secrets") and "SESSION_SECRET" in st.secrets:
+            return str(st.secrets["SESSION_SECRET"]).strip()
+    except Exception:
+        pass
+    # 3. Clave determinística derivada de Binance API Secret (estable entre despliegues y contenedores de Render)
+    binance_sec = os.getenv("BINANCE_API_SECRET", "")
+    if not binance_sec:
+        try:
+            if hasattr(st, "secrets"):
+                binance_sec = st.secrets.get("BINANCE_API_SECRET") or st.secrets.get("binance_api_secret") or ""
+        except Exception:
+            pass
+    if binance_sec:
+        return hashlib.sha256(f"ricomcpato_p2p_session_key_{binance_sec}".encode("utf-8")).hexdigest()
+    # 4. Archivo local persistente si existe
     if SECRET_FILE.exists():
         try:
             with open(SECRET_FILE, "r", encoding="utf-8") as f:
@@ -186,13 +204,8 @@ def _get_secret_key() -> str:
                     return s
         except Exception:
             pass
-    nuevo_sec = os.urandom(32).hex()
-    try:
-        with open(SECRET_FILE, "w", encoding="utf-8") as f:
-            f.write(nuevo_sec)
-    except Exception:
-        pass
-    return nuevo_sec
+    # 5. Clave base del sistema
+    return "ricomcpato_auth_stable_secret_salt_2026"
 
 def generar_token_sesion(user_data: dict, duracion_segundos: int = SESSION_DURATION_SECONDS) -> str:
     now = int(time.time())
@@ -209,23 +222,24 @@ def generar_token_sesion(user_data: dict, duracion_segundos: int = SESSION_DURAT
     sig = hmac.new(secret, b64_payload.encode('utf-8'), hashlib.sha256).hexdigest()
     return f"{b64_payload}.{sig}"
 
-def validar_token_sesion(token: str) -> tuple[dict | None, bool]:
+def validar_token_sesion(token: str) -> tuple[str, dict | None, bool]:
     """
-    Retorna (user_data, debe_renovar).
-    - user_data: dict si el token es válido y no ha expirado, o None si expiró/inválido.
-    - debe_renovar: True si el token es válido pero está en el umbral de renovación.
+    Retorna (status, user_data, debe_renovar):
+    - status: 'OK', 'EXPIRED', 'INVALID'
+    - user_data: dict si 'OK', o None
+    - debe_renovar: True si quedan menos de SESSION_RENEW_THRESHOLD segundos
     """
     if not token or "." not in token:
-        return None, False
+        return "INVALID", None, False
     try:
         parts = token.strip().split(".")
         if len(parts) != 2:
-            return None, False
+            return "INVALID", None, False
         b64_payload, sig = parts
         secret = _get_secret_key().encode('utf-8')
         calc_sig = hmac.new(secret, b64_payload.encode('utf-8'), hashlib.sha256).hexdigest()
         if not hmac.compare_digest(sig, calc_sig):
-            return None, False
+            return "INVALID", None, False
 
         padded = b64_payload + '=' * (-len(b64_payload) % 4)
         raw_json = base64.urlsafe_b64decode(padded).decode('utf-8')
@@ -234,12 +248,12 @@ def validar_token_sesion(token: str) -> tuple[dict | None, bool]:
         now = int(time.time())
         exp = payload.get("exp", 0)
         if now > exp:
-            return None, False
+            return "EXPIRED", None, False
 
         users = get_usuarios_dict()
         key = str(payload.get("username", "")).strip().lower()
         if key not in users:
-            return None, False
+            return "INVALID", None, False
 
         user_info = users[key]
         user_data = {
@@ -249,9 +263,9 @@ def validar_token_sesion(token: str) -> tuple[dict | None, bool]:
         }
 
         debe_renovar = (exp - now) < SESSION_RENEW_THRESHOLD
-        return user_data, debe_renovar
+        return "OK", user_data, debe_renovar
     except Exception:
-        return None, False
+        return "INVALID", None, False
 
 def sincronizar_token_en_browser(token: str):
     components.html(f"""
@@ -295,8 +309,8 @@ def verificar_acceso():
     if st.session_state.get("usuario_activo") and st.session_state.get("autenticado"):
         token_actual = st.query_params.get("session")
         if token_actual:
-            user_data, debe_renovar = validar_token_sesion(token_actual)
-            if debe_renovar and user_data:
+            status, user_data, debe_renovar = validar_token_sesion(token_actual)
+            if status == "OK" and debe_renovar and user_data:
                 nuevo_tok = generar_token_sesion(user_data)
                 st.query_params["session"] = nuevo_tok
                 sincronizar_token_en_browser(nuevo_tok)
@@ -305,8 +319,8 @@ def verificar_acceso():
     # 2. Si no está en session_state (tras refrescar página F5 o reconexión de WebSocket)
     token = st.query_params.get("session")
     if token:
-        user_data, debe_renovar = validar_token_sesion(token)
-        if user_data:
+        status, user_data, debe_renovar = validar_token_sesion(token)
+        if status == "OK" and user_data:
             st.session_state["usuario_activo"] = user_data
             st.session_state["autenticado"] = True
             if debe_renovar:
@@ -314,11 +328,14 @@ def verificar_acceso():
                 st.query_params["session"] = nuevo_tok
                 sincronizar_token_en_browser(nuevo_tok)
             return True
-        else:
-            # Token expirado o inválido: limpiarlo
+        elif status == "EXPIRED":
             st.query_params.pop("session", None)
             limpiar_token_en_browser()
-            st.warning("⏱️ Tu sesión ha expirado tras más de 7 minutos de inactividad. Por favor ingresa nuevamente.")
+            st.warning("⏱️ Tu sesión ha expirado tras 7 minutos de inactividad. Por favor ingresa nuevamente.")
+        else:
+            # Token no válido (ej. de despliegue anterior): limpiar en silencio sin alertar
+            st.query_params.pop("session", None)
+            limpiar_token_en_browser()
 
     # 3. Intentar restaurar sesión desde localStorage si el usuario abrió la URL limpia
     components.html("""
