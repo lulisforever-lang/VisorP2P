@@ -1,8 +1,12 @@
+import base64
 import hashlib
+import hmac
 import json
 import os
+import time
 from pathlib import Path
 import streamlit as st
+import streamlit.components.v1 as components
 
 BASE_DIR = Path(__file__).resolve().parent
 USUARIOS_FILE = BASE_DIR / "usuarios.json"
@@ -166,14 +170,171 @@ def listar_usuarios() -> list[dict]:
         })
     return res
 
+SESSION_DURATION_SECONDS = 20 * 60  # 20 minutos de inactividad
+SESSION_RENEW_THRESHOLD = 10 * 60   # Renovar si quedan menos de 10 minutos
+SECRET_FILE = BASE_DIR / ".session_secret"
+
+def _get_secret_key() -> str:
+    sec = os.getenv("SESSION_SECRET")
+    if sec:
+        return sec
+    if SECRET_FILE.exists():
+        try:
+            with open(SECRET_FILE, "r", encoding="utf-8") as f:
+                s = f.read().strip()
+                if s:
+                    return s
+        except Exception:
+            pass
+    nuevo_sec = os.urandom(32).hex()
+    try:
+        with open(SECRET_FILE, "w", encoding="utf-8") as f:
+            f.write(nuevo_sec)
+    except Exception:
+        pass
+    return nuevo_sec
+
+def generar_token_sesion(user_data: dict, duracion_segundos: int = SESSION_DURATION_SECONDS) -> str:
+    now = int(time.time())
+    payload = {
+        "username": user_data.get("username", ""),
+        "nombre": user_data.get("nombre", ""),
+        "role": user_data.get("role", "operador"),
+        "exp": now + duracion_segundos,
+        "iat": now
+    }
+    raw_payload = json.dumps(payload, separators=(',', ':')).encode('utf-8')
+    b64_payload = base64.urlsafe_b64encode(raw_payload).decode('utf-8').rstrip('=')
+    secret = _get_secret_key().encode('utf-8')
+    sig = hmac.new(secret, b64_payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{b64_payload}.{sig}"
+
+def validar_token_sesion(token: str) -> tuple[dict | None, bool]:
+    """
+    Retorna (user_data, debe_renovar).
+    - user_data: dict si el token es válido y no ha expirado, o None si expiró/inválido.
+    - debe_renovar: True si el token es válido pero está en el umbral de renovación.
+    """
+    if not token or "." not in token:
+        return None, False
+    try:
+        parts = token.strip().split(".")
+        if len(parts) != 2:
+            return None, False
+        b64_payload, sig = parts
+        secret = _get_secret_key().encode('utf-8')
+        calc_sig = hmac.new(secret, b64_payload.encode('utf-8'), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, calc_sig):
+            return None, False
+
+        padded = b64_payload + '=' * (-len(b64_payload) % 4)
+        raw_json = base64.urlsafe_b64decode(padded).decode('utf-8')
+        payload = json.loads(raw_json)
+
+        now = int(time.time())
+        exp = payload.get("exp", 0)
+        if now > exp:
+            return None, False
+
+        users = get_usuarios_dict()
+        key = str(payload.get("username", "")).strip().lower()
+        if key not in users:
+            return None, False
+
+        user_info = users[key]
+        user_data = {
+            "username": user_info.get("username", payload.get("username")),
+            "nombre": user_info.get("nombre", payload.get("nombre")),
+            "role": user_info.get("role", payload.get("role", "operador"))
+        }
+
+        debe_renovar = (exp - now) < SESSION_RENEW_THRESHOLD
+        return user_data, debe_renovar
+    except Exception:
+        return None, False
+
+def sincronizar_token_en_browser(token: str):
+    components.html(f"""
+    <script>
+    try {{
+        localStorage.setItem("ricomcpato_p2p_session", "{token}");
+    }} catch(e) {{}}
+    </script>
+    """, height=0)
+
+def limpiar_token_en_browser():
+    components.html("""
+    <script>
+    try {
+        localStorage.removeItem("ricomcpato_p2p_session");
+    } catch(e) {}
+    </script>
+    """, height=0)
+
 def cerrar_sesion():
     st.session_state["usuario_activo"] = None
     st.session_state["autenticado"] = False
+    st.query_params.pop("session", None)
+    st.query_params.pop("view", None)
+    limpiar_token_en_browser()
+    components.html("""
+    <script>
+    try {
+        localStorage.removeItem("ricomcpato_p2p_session");
+        const url = new URL(window.location.href);
+        url.searchParams.delete("session");
+        url.searchParams.delete("view");
+        window.location.replace(url.pathname);
+    } catch(e) {}
+    </script>
+    """, height=0)
     st.rerun()
 
 def verificar_acceso():
+    # 1. Si ya está autenticado en st.session_state
     if st.session_state.get("usuario_activo") and st.session_state.get("autenticado"):
+        token_actual = st.query_params.get("session")
+        if token_actual:
+            user_data, debe_renovar = validar_token_sesion(token_actual)
+            if debe_renovar and user_data:
+                nuevo_tok = generar_token_sesion(user_data)
+                st.query_params["session"] = nuevo_tok
+                sincronizar_token_en_browser(nuevo_tok)
         return True
+
+    # 2. Si no está en session_state (tras refrescar página F5 o reconexión de WebSocket)
+    token = st.query_params.get("session")
+    if token:
+        user_data, debe_renovar = validar_token_sesion(token)
+        if user_data:
+            st.session_state["usuario_activo"] = user_data
+            st.session_state["autenticado"] = True
+            if debe_renovar:
+                nuevo_tok = generar_token_sesion(user_data)
+                st.query_params["session"] = nuevo_tok
+                sincronizar_token_en_browser(nuevo_tok)
+            return True
+        else:
+            # Token expirado o inválido: limpiarlo
+            st.query_params.pop("session", None)
+            limpiar_token_en_browser()
+            st.warning("⏱️ Tu sesión ha expirado tras más de 15 minutos de inactividad. Por favor ingresa nuevamente.")
+
+    # 3. Intentar restaurar sesión desde localStorage si el usuario abrió la URL limpia
+    components.html("""
+    <script>
+    (function() {
+        try {
+            const s = localStorage.getItem("ricomcpato_p2p_session");
+            if (s && !window.location.search.includes("session=")) {
+                const url = new URL(window.location.href);
+                url.searchParams.set("session", s);
+                window.location.replace(url.toString());
+            }
+        } catch(e) {}
+    })();
+    </script>
+    """, height=0)
 
     cargar_css("auth.css")
 
@@ -219,6 +380,9 @@ def verificar_acceso():
             if user_data:
                 st.session_state["usuario_activo"] = user_data
                 st.session_state["autenticado"] = True
+                tok = generar_token_sesion(user_data)
+                st.query_params["session"] = tok
+                sincronizar_token_en_browser(tok)
                 st.success(f"¡Bienvenido, {user_data['nombre']}!")
                 st.rerun()
             else:
@@ -227,7 +391,7 @@ def verificar_acceso():
         st.markdown("""
             <div class="login-footer-pill">
                 <span>🛡️</span>
-                <span>Sesión cifrada individual &bull; Registro auditado</span>
+                <span>Sesión segura con persistencia &bull; Registro auditado</span>
             </div>
         """, unsafe_allow_html=True)
 

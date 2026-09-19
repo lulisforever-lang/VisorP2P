@@ -1,6 +1,7 @@
 # Claves privadas y variables de entorno
 .env
 *.env
+.session_secret
 .streamlit/secrets.toml
 
 # Python bytecode y caché

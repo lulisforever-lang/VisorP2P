@@ -248,7 +248,11 @@ if "cfg_timezone" not in st.session_state:
 
 # Estado de la vista activa
 if "vista_actual" not in st.session_state:
-    st.session_state["vista_actual"] = "Reporte Ganancia Por Ciclo"
+    v_param = st.query_params.get("view")
+    if v_param in ["Reporte Ganancia Por Ciclo", "Histórico Semanal", "Historial General", "Registrar Operación Externa", "Ajustes"]:
+        st.session_state["vista_actual"] = v_param
+    else:
+        st.session_state["vista_actual"] = "Reporte Ganancia Por Ciclo"
 
 usuario_activo = st.session_state.get("usuario_activo", {"username": "Victoria", "nombre": "Victoria", "role": "operador"})
 es_admin = usuario_activo.get("role") == "admin"
@@ -265,6 +269,7 @@ if es_admin:
 # Si el usuario no es admin y está en Ajustes, redirigir a Reporte
 if not es_admin and st.session_state.get("vista_actual") == "Ajustes":
     st.session_state["vista_actual"] = "Reporte Ganancia Por Ciclo"
+    st.query_params["view"] = "Reporte Ganancia Por Ciclo"
 
 # SIDEBAR DE NAVEGACIÓN
 with st.sidebar:
@@ -284,6 +289,7 @@ with st.sidebar:
         if st.button(f"{nombre}  {icono}", key=f"nav_{nombre}", type=tipo_btn, use_container_width=True, help=nombre):
             if st.session_state.get("vista_actual") != nombre:
                 st.session_state["vista_actual"] = nombre
+                st.query_params["view"] = nombre
                 if nombre == "Histórico Semanal":
                     st.session_state["filtro_dia_semana"] = None
                 elif nombre == "Registrar Operación Externa":
