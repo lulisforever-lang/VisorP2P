@@ -140,32 +140,112 @@ def get_manual(t_type, start_dt, end_dt):
 
 def render_vista(api_key, api_secret):
     st.title("⚡ Reporte Ganancia Por Ciclo")
-    st.subheader("⏱️ Horario Del Ciclo")
 
     now_local = data_manager.get_now_local()
+    ult_ciclo = data_manager.get_ultimo_ciclo_fin()
+
+    # Pre-cargar fecha y hora sugerida de inicio a partir del último ciclo registrado
+    if "f_ini" not in st.session_state:
+        if ult_ciclo and ult_ciclo.get("dt_fin"):
+            dt_sug_ini = ult_ciclo["dt_fin"]
+        else:
+            dt_sug_ini = now_local - timedelta(hours=2)
+        st.session_state["f_ini"] = dt_sug_ini.date()
+        h_sug = dt_sug_ini.strftime("%I")
+        st.session_state["h_ini"] = h_sug if h_sug in HORAS_12 else HORAS_12[0]
+        st.session_state["m_ini"] = dt_sug_ini.strftime("%M")
+        st.session_state["p_ini"] = dt_sug_ini.strftime("%p")
+
+    if "f_fin" not in st.session_state:
+        st.session_state["f_fin"] = now_local.date()
+        h_fn_sug = now_local.strftime("%I")
+        st.session_state["h_fn"] = h_fn_sug if h_fn_sug in HORAS_12 else HORAS_12[0]
+        st.session_state["m_fn"] = now_local.strftime("%M")
+        st.session_state["p_fn"] = now_local.strftime("%p")
+
+    col_h_title, col_h_sync = st.columns([3, 1])
+    with col_h_title:
+        st.subheader("⏱️ Horario Del Ciclo")
+    with col_h_sync:
+        if st.button("🔄 Sincronizar Horas", help="Restablece el inicio al fin del último ciclo y el fin a la hora actual", use_container_width=True):
+            if ult_ciclo and ult_ciclo.get("dt_fin"):
+                dt_res_ini = ult_ciclo["dt_fin"]
+                st.session_state["f_ini"] = dt_res_ini.date()
+                h_res = dt_res_ini.strftime("%I")
+                st.session_state["h_ini"] = h_res if h_res in HORAS_12 else HORAS_12[0]
+                st.session_state["m_ini"] = dt_res_ini.strftime("%M")
+                st.session_state["p_ini"] = dt_res_ini.strftime("%p")
+            st.session_state["f_fin"] = now_local.date()
+            h_res_fn = now_local.strftime("%I")
+            st.session_state["h_fn"] = h_res_fn if h_res_fn in HORAS_12 else HORAS_12[0]
+            st.session_state["m_fn"] = now_local.strftime("%M")
+            st.session_state["p_fn"] = now_local.strftime("%p")
+            st.rerun()
 
     c_in1, c_in2, c_in3, c_in4 = st.columns([2, 1, 1, 1])
     with c_in1:
-        fecha_inicio = st.date_input("Fecha Inicio", value=now_local.date(), key="f_ini")
+        fecha_inicio = st.date_input("Fecha Inicio", key="f_ini")
     with c_in2:
-        h_in = st.selectbox("Hora Inicio", HORAS_12, index=11, key="h_ini")
+        h_in = st.selectbox("Hora Inicio", HORAS_12, key="h_ini")
     with c_in3:
-        m_in = st.selectbox("Minuto", MINUTOS, index=0, key="m_ini")
+        m_in = st.selectbox("Minuto", MINUTOS, key="m_ini")
     with c_in4:
-        p_in = st.selectbox("Periodo", PERIODOS, index=1, key="p_ini")
+        p_in = st.selectbox("Periodo", PERIODOS, key="p_ini")
 
     c_fn1, c_fn2, c_fn3, c_fn4 = st.columns([2, 1, 1, 1])
     with c_fn1:
-        fecha_fin = st.date_input("Fecha Fin", value=now_local.date(), key="f_fin")
+        fecha_fin = st.date_input("Fecha Fin", key="f_fin")
     with c_fn2:
-        h_fn = st.selectbox("Hora Fin", HORAS_12, index=0, key="h_fn")
+        h_fn = st.selectbox("Hora Fin", HORAS_12, key="h_fn")
     with c_fn3:
-        m_fn = st.selectbox("Minuto", MINUTOS, index=20, key="m_fn")
+        m_fn = st.selectbox("Minuto", MINUTOS, key="m_fn")
     with c_fn4:
-        p_fn = st.selectbox("Periodo", PERIODOS, index=1, key="p_fn")
+        p_fn = st.selectbox("Periodo", PERIODOS, key="p_fn")
 
     dt_inicio = convertir_a_datetime(fecha_inicio, h_in, m_in, p_in)
     dt_fin = convertir_a_datetime(fecha_fin, h_fn, m_fn, p_fn)
+
+    # Indicador de estado de continuidad antes de conciliar
+    prev_ciclo = data_manager.buscar_ciclo_inmediato_anterior(dt_inicio)
+    if prev_ciclo and prev_ciclo.get("dt_fin"):
+        dt_p_fin = prev_ciclo["dt_fin"]
+        diff_seg = (dt_inicio - dt_p_fin).total_seconds()
+        diff_min = diff_seg / 60.0
+
+        c_status, c_btn = st.columns([3, 1])
+        with c_status:
+            if abs(diff_min) <= 3:
+                st.markdown(
+                    f'<div class="continuity-status-pill continuity-ok">'
+                    f'✅ <strong>Continuidad sincronizada:</strong> Inicia inmediatamente tras el Ciclo #{prev_ciclo["ciclo"]} ({dt_p_fin.strftime("%d/%m %I:%M %p")})'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+            elif diff_min > 3:
+                t_str = f"{int(diff_min // 60)}h {int(diff_min % 60)}m" if diff_min >= 60 else f"{int(diff_min)} min"
+                st.markdown(
+                    f'<div class="continuity-status-pill continuity-warning">'
+                    f'⚠️ <strong>Salto de tiempo:</strong> Hay {t_str} de diferencia tras el Ciclo #{prev_ciclo["ciclo"]} ({dt_p_fin.strftime("%d/%m %I:%M %p")})'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+            else:
+                st.markdown(
+                    f'<div class="continuity-status-pill continuity-info">'
+                    f'ℹ️ <strong>Solapamiento:</strong> El inicio seleccionado se solapa con el Ciclo #{prev_ciclo["ciclo"]} ({dt_p_fin.strftime("%d/%m %I:%M %p")})'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+
+        if diff_min > 3:
+            with c_btn:
+                if st.button(f"⚡ Pegar al Ciclo #{prev_ciclo['ciclo']}", use_container_width=True, key="btn_pegar_prev_header"):
+                    st.session_state["f_ini"] = dt_p_fin.date()
+                    h_fix = dt_p_fin.strftime("%I")
+                    st.session_state["h_ini"] = h_fix if h_fix in HORAS_12 else HORAS_12[0]
+                    st.session_state["m_ini"] = dt_p_fin.strftime("%M")
+                    st.session_state["p_ini"] = dt_p_fin.strftime("%p")
+                    st.rerun()
 
     st.divider()
 
@@ -176,16 +256,48 @@ def render_vista(api_key, api_secret):
             st.error("La fecha de inicio debe ser anterior a la de fin.")
         else:
             app_tz = data_manager.get_app_timezone()
-            dt_inicio_aware = dt_inicio.replace(tzinfo=app_tz)
+            # Si hay un salto previo, ampliar ventana de descarga para auditar el hueco
+            dt_auditoria_ini = dt_inicio
+            if prev_ciclo and prev_ciclo.get("dt_fin"):
+                dt_p_fin = prev_ciclo["dt_fin"]
+                if (dt_inicio - dt_p_fin).total_seconds() > 180:
+                    dt_auditoria_ini = min(dt_auditoria_ini, dt_p_fin)
+
+            dt_inicio_aware = dt_auditoria_ini.replace(tzinfo=app_tz)
             dt_fin_aware = dt_fin.replace(tzinfo=app_tz)
             ts_start = int((dt_inicio_aware - timedelta(days=2)).timestamp() * 1000)
             ts_end = int((dt_fin_aware + timedelta(days=1)).timestamp() * 1000)
+
             with st.spinner("Conciliando ciclo..."):
                 raw, err_api = fetch_orders(api_key, api_secret, ts_start, ts_end)
                 if err_api:
                     st.error(f"⚠️ Error devuelto por Binance: {err_api}")
                     if "-1003" in str(err_api) or "restricted location" in str(err_api).lower() or "451" in str(err_api):
                         st.warning("🚨 **Bloqueo Geográfico de Binance:** Binance.com bloquea automáticamente los servidores ubicados en EE.UU. (como Streamlit Community Cloud en AWS Virginia).")
+
+                # Auditoría de órdenes en el hueco si hubo un salto respecto al ciclo previo
+                st.session_state["gap_detectado"] = None
+                if prev_ciclo and prev_ciclo.get("dt_fin"):
+                    dt_p_fin = prev_ciclo["dt_fin"]
+                    if (dt_inicio - dt_p_fin).total_seconds() > 180:
+                        g_bb, g_bs = procesar_ordenes(raw, dt_p_fin, dt_inicio, False, False)
+                        g_mb = get_manual("BUY", dt_p_fin, dt_inicio)
+                        g_ms = get_manual("SELL", dt_p_fin, dt_inicio)
+                        g_b = pd.concat([g_bb, g_mb], ignore_index=True)
+                        g_s = pd.concat([g_bs, g_ms], ignore_index=True)
+                        tot_gap = len(g_b) + len(g_s)
+                        if tot_gap > 0:
+                            st.session_state["gap_detectado"] = {
+                                "dt_prev_fin": dt_p_fin,
+                                "dt_inicio": dt_inicio,
+                                "prev_ciclo": prev_ciclo["ciclo"],
+                                "total_ordenes": tot_gap,
+                                "ventas": len(g_s),
+                                "compras": len(g_b),
+                                "vol_ventas": g_s["amount"].sum() if not g_s.empty else 0.0,
+                                "vol_compras": g_b["amount"].sum() if not g_b.empty else 0.0
+                            }
+
                 mb, ms = get_manual("BUY", dt_inicio, dt_fin), get_manual("SELL", dt_inicio, dt_fin)
                 if not raw and mb.empty and ms.empty and not err_api:
                     st.info("ℹ️ Conexión exitosa, pero no se encontraron órdenes en Binance ni operaciones manuales en este rango de fechas y horas.")
@@ -197,18 +309,14 @@ def render_vista(api_key, api_secret):
                 com_tot = com_b + com_v
 
                 # Compras (Entrada):
-                # u_comp es el USDT neto recibido en billetera (descontando comisiones si aplicaron)
                 u_comp = (df_b["amount"] - df_b["commission"]).sum() if not df_b.empty else 0.0
                 f_gast = df_b["totalPrice"].sum() if not df_b.empty else 0.0
                 f_nom = df_b["totalPrice_nominal"].sum() if not df_b.empty else 0.0
                 g_red_fiat = f_gast - f_nom
 
                 # Ventas (Salida):
-                # u_vend_nom es el USDT transferido al comprador
                 u_vend_nom = df_s["amount"].sum() if not df_s.empty else 0.0
                 f_rec = df_s["totalPrice"].sum() if not df_s.empty else 0.0
-
-                # u_vend_total es el USDT total que salió de la cuenta (al comprador + comisión Binance del vendedor)
                 u_vend_total = u_vend_nom + com_v
 
                 # Tasas Ponderadas Efectivas (Netas):
@@ -221,9 +329,7 @@ def render_vista(api_key, api_secret):
                 spread = ((t_vent - t_comp) / t_comp * 100) if t_comp > 0 else 0.0
 
                 if t_comp > 0 and cap_cic > 0:
-                    # Con cap_cic USDT vendidos a tasa efectiva t_vent, se obtiene fiat neto:
                     fiat_prop = cap_cic * t_vent
-                    # Con ese fiat se recompran USDT a tasa efectiva t_comp:
                     u_recomp = fiat_prop / t_comp
                     profit_base = u_recomp - cap_cic
                     if st.session_state["cfg_descontar_redondeo"]:
@@ -234,6 +340,7 @@ def render_vista(api_key, api_secret):
                 st.session_state["reporte_actual"] = {
                     "dt_inicio_str": dt_inicio.strftime('%d/%m/%Y %I:%M %p'),
                     "dt_fin_str": dt_fin.strftime('%d/%m/%Y %I:%M %p'),
+                    "dt_fin_dt": dt_fin,
                     "t_vent": t_vent,
                     "t_vent_bruta": t_vent_bruta,
                     "t_comp": t_comp,
@@ -245,6 +352,54 @@ def render_vista(api_key, api_secret):
                     "profit_base": profit_base,
                     "fecha_registro": dt_fin.strftime("%d/%m/%Y %I:%M:%S %p")
                 }
+
+    # Despliegue de Alerta de Órdenes Huérfanas si hay un hueco con órdenes sin registrar
+    if st.session_state.get("gap_detectado"):
+        gap = st.session_state["gap_detectado"]
+        dt_gap_ini_str = gap["dt_prev_fin"].strftime('%d/%m/%Y %I:%M %p')
+        dt_gap_fin_str = gap["dt_inicio"].strftime('%d/%m/%Y %I:%M %p')
+
+        st.markdown(f"""
+        <div class="gap-alert-card">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+                <div style="font-size: 2rem; line-height: 1;">⚠️</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 1.05rem; color: #f85149; margin-bottom: 4px;">
+                        ¡Alerta! Hay órdenes sin registrar en el salto previo a este ciclo
+                    </div>
+                    <div style="font-size: 0.88rem; color: #c9d1d9; line-height: 1.45;">
+                        Entre el fin del <strong>Ciclo #{gap['prev_ciclo']}</strong> ({dt_gap_ini_str}) y el inicio seleccionado ({dt_gap_fin_str})
+                        se detectaron <strong>{gap['total_ordenes']} órdenes completadas</strong> que <u>NO están registradas</u> en ningún ciclo:
+                        <ul style="margin: 6px 0 6px 18px; padding: 0;">
+                            <li><strong>{gap['ventas']} Ventas</strong> (Volumen: <strong>{gap['vol_ventas']:,.2f} USDT</strong>)</li>
+                            <li><strong>{gap['compras']} Compras</strong> (Volumen: <strong>{gap['vol_compras']:,.2f} USDT</strong>)</li>
+                        </ul>
+                        <em>Si continúas sin registrar ese ciclo previo, este ciclo actual o los futuros tendrán sobrantes y descuadres de capital.</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button(f"⚡ Conciliar ciclo faltante ({dt_gap_ini_str} ➔ {dt_gap_fin_str})", type="primary", use_container_width=True, key="btn_conciliar_gap"):
+            dt_g_ini = gap["dt_prev_fin"]
+            dt_g_fin = gap["dt_inicio"]
+            st.session_state["f_ini"] = dt_g_ini.date()
+            h_g_ini = dt_g_ini.strftime("%I")
+            st.session_state["h_ini"] = h_g_ini if h_g_ini in HORAS_12 else HORAS_12[0]
+            st.session_state["m_ini"] = dt_g_ini.strftime("%M")
+            st.session_state["p_ini"] = dt_g_ini.strftime("%p")
+
+            st.session_state["f_fin"] = dt_g_fin.date()
+            h_g_fin = dt_g_fin.strftime("%I")
+            st.session_state["h_fn"] = h_g_fin if h_g_fin in HORAS_12 else HORAS_12[0]
+            st.session_state["m_fn"] = dt_g_fin.strftime("%M")
+            st.session_state["p_fn"] = dt_g_fin.strftime("%p")
+
+            st.session_state["gap_detectado"] = None
+            if "reporte_actual" in st.session_state:
+                del st.session_state["reporte_actual"]
+            st.rerun()
 
     if "reporte_actual" in st.session_state:
         rep = st.session_state["reporte_actual"]
@@ -316,6 +471,15 @@ def render_vista(api_key, api_secret):
                 "Fecha_Fin": rep.get("dt_fin_str", "")
             }
             data_manager.guardar_ciclo(nuevo_registro)
+            if "gap_detectado" in st.session_state:
+                st.session_state["gap_detectado"] = None
+            if "dt_fin_dt" in rep:
+                next_ini = rep["dt_fin_dt"]
+                st.session_state["f_ini"] = next_ini.date()
+                h_next = next_ini.strftime("%I")
+                st.session_state["h_ini"] = h_next if h_next in HORAS_12 else HORAS_12[0]
+                st.session_state["m_ini"] = next_ini.strftime("%M")
+                st.session_state["p_ini"] = next_ini.strftime("%p")
             st.success(f"✅ Ciclo #{nuevo_num_ciclo} registrado para **{usr_registro}** con {ganancia_final_ciclo:+,.2f} USDT.")
             st.toast(f"Ciclo #{nuevo_num_ciclo} guardado para {usr_registro}")
 

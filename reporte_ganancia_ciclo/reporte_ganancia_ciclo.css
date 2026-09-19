@@ -115,3 +115,40 @@
         flex: 1 1 100% !important;
     }
 }
+
+/* Banner de alerta de hueco / órdenes huérfanas */
+.gap-alert-card {
+    background: linear-gradient(145deg, rgba(248, 81, 73, 0.12) 0%, rgba(26, 30, 36, 0.95) 100%);
+    border: 1px solid #f85149;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(248, 81, 73, 0.15);
+}
+
+/* Indicador de continuidad */
+.continuity-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+.continuity-ok {
+    background-color: rgba(46, 160, 67, 0.15);
+    color: #3fb950;
+    border: 1px solid rgba(46, 160, 67, 0.4);
+}
+.continuity-warning {
+    background-color: rgba(210, 153, 34, 0.15);
+    color: #e3b341;
+    border: 1px solid rgba(210, 153, 34, 0.4);
+}
+.continuity-info {
+    background-color: rgba(56, 139, 253, 0.15);
+    color: #58a6ff;
+    border: 1px solid rgba(56, 139, 253, 0.4);
+}

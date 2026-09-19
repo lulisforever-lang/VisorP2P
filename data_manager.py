@@ -191,7 +191,112 @@ def get_rango_semana_actual() -> tuple:
     lunes = now - timedelta(days=now.weekday())
     domingo = lunes + timedelta(days=6)
     label = f"Semana del {lunes.strftime('%d/%m/%Y')} al {domingo.strftime('%d/%m/%Y')}"
-    return lunes, domingo, label
+def parse_fecha_ciclo(val):
+    """Parsea de forma robusta cualquier representación de fecha/hora de un ciclo a datetime naive."""
+    if val is None or pd.isna(val) or val == "":
+        return None
+    if isinstance(val, datetime):
+        return val.replace(tzinfo=None)
+    val_str = str(val).strip()
+    for fmt in (
+        "%d/%m/%Y %I:%M:%S %p",
+        "%d/%m/%Y %I:%M %p",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d",
+        "%d/%m/%Y"
+    ):
+        try:
+            return datetime.strptime(val_str, fmt)
+        except Exception:
+            pass
+    try:
+        dt = pd.to_datetime(val_str, dayfirst=True)
+        if pd.notnull(dt):
+            return dt.to_pydatetime().replace(tzinfo=None)
+    except Exception:
+        pass
+    return None
+
+def get_ultimo_ciclo_fin() -> dict:
+    """
+    Retorna información del ciclo más reciente registrado en el sistema (a nivel global):
+    {
+        'ciclo': int,
+        'dt_fin': datetime,
+        'dt_ini': datetime o None,
+        'usuario': str,
+        'capital': float
+    }
+    O None si no hay ciclos registrados.
+    """
+    df = get_historico()
+    if df is None or df.empty:
+        return None
+
+    ciclos_parsed = []
+    for _, r in df.iterrows():
+        c_num = r.get("Ciclo")
+        try:
+            c_num = int(pd.to_numeric(c_num, errors="coerce"))
+        except Exception:
+            c_num = 0
+
+        dt_fin = parse_fecha_ciclo(r.get("Fecha_Fin")) or parse_fecha_ciclo(r.get("Fecha_Hora"))
+        dt_ini = parse_fecha_ciclo(r.get("Fecha_Inicio"))
+        usr = str(r.get("Usuario") or "Operador")
+        cap = float(pd.to_numeric(r.get("Capital"), errors="coerce")) if pd.notnull(r.get("Capital")) else 0.0
+
+        if dt_fin is not None:
+            ciclos_parsed.append({
+                "ciclo": c_num,
+                "dt_fin": dt_fin,
+                "dt_ini": dt_ini,
+                "usuario": usr,
+                "capital": cap
+            })
+
+    if not ciclos_parsed:
+        return None
+
+    return max(ciclos_parsed, key=lambda x: x["dt_fin"])
+
+def buscar_ciclo_inmediato_anterior(dt_referencia: datetime) -> dict:
+    """
+    Retorna el ciclo registrado que terminó más recientemente antes o exactamente en dt_referencia (+ tolerancia de 1 min).
+    """
+    df = get_historico()
+    if df is None or df.empty or dt_referencia is None:
+        return None
+
+    ciclos_anteriores = []
+    limite = dt_referencia + timedelta(minutes=1)
+
+    for _, r in df.iterrows():
+        c_num = r.get("Ciclo")
+        try:
+            c_num = int(pd.to_numeric(c_num, errors="coerce"))
+        except Exception:
+            c_num = 0
+
+        dt_fin = parse_fecha_ciclo(r.get("Fecha_Fin")) or parse_fecha_ciclo(r.get("Fecha_Hora"))
+        dt_ini = parse_fecha_ciclo(r.get("Fecha_Inicio"))
+        usr = str(r.get("Usuario") or "Operador")
+        cap = float(pd.to_numeric(r.get("Capital"), errors="coerce")) if pd.notnull(r.get("Capital")) else 0.0
+
+        if dt_fin is not None and dt_fin <= limite:
+            ciclos_anteriores.append({
+                "ciclo": c_num,
+                "dt_fin": dt_fin,
+                "dt_ini": dt_ini,
+                "usuario": usr,
+                "capital": cap
+            })
+
+    if not ciclos_anteriores:
+        return None
+
+    return max(ciclos_anteriores, key=lambda x: x["dt_fin"])
 
 def guardar_ciclo(nuevo_registro: dict) -> bool:
     if "Usuario" not in nuevo_registro or not nuevo_registro["Usuario"]:
