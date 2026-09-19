@@ -169,7 +169,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             st.rerun()
 
 def render_vista():
-    st.title("📊 Histórico Semanal y Liquidación de Operador")
+    st.title("📊 Histórico Semanal")
 
     df_all = data_manager.get_historico()
     df_all = data_manager.enriquecer_historico_fechas(df_all)
