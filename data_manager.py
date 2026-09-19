@@ -191,6 +191,8 @@ def get_rango_semana_actual() -> tuple:
     lunes = now - timedelta(days=now.weekday())
     domingo = lunes + timedelta(days=6)
     label = f"Semana del {lunes.strftime('%d/%m/%Y')} al {domingo.strftime('%d/%m/%Y')}"
+    return lunes, domingo, label
+
 def parse_fecha_ciclo(val):
     """Parsea de forma robusta cualquier representación de fecha/hora de un ciclo a datetime naive."""
     if val is None or pd.isna(val) or val == "":
