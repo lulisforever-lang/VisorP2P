@@ -170,8 +170,8 @@ def listar_usuarios() -> list[dict]:
         })
     return res
 
-SESSION_DURATION_SECONDS = 20 * 60  # 20 minutos de inactividad
-SESSION_RENEW_THRESHOLD = 10 * 60   # Renovar si quedan menos de 10 minutos
+SESSION_DURATION_SECONDS = 7 * 60   # 7 minutos de inactividad
+SESSION_RENEW_THRESHOLD = 3 * 60    # Renovar si quedan menos de 3 minutos
 SECRET_FILE = BASE_DIR / ".session_secret"
 
 def _get_secret_key() -> str:
@@ -318,7 +318,7 @@ def verificar_acceso():
             # Token expirado o inválido: limpiarlo
             st.query_params.pop("session", None)
             limpiar_token_en_browser()
-            st.warning("⏱️ Tu sesión ha expirado tras más de 15 minutos de inactividad. Por favor ingresa nuevamente.")
+            st.warning("⏱️ Tu sesión ha expirado tras más de 7 minutos de inactividad. Por favor ingresa nuevamente.")
 
     # 3. Intentar restaurar sesión desde localStorage si el usuario abrió la URL limpia
     components.html("""
