@@ -138,8 +138,27 @@ def procesar_ordenes(orders, start_dt, end_dt, redondear, incluir_pagadas):
 def get_manual(t_type, start_dt, end_dt):
     return data_manager.get_operaciones_manuales_filtradas(t_type, start_dt, end_dt)
 
+def programar_actualizacion_horario(**kwargs):
+    upd = st.session_state.get("_pending_time_update", {})
+    for k, v in kwargs.items():
+        if v is not None:
+            upd[k] = v
+    st.session_state["_pending_time_update"] = upd
+
 def render_vista(api_key, api_secret):
     st.title("⚡ Reporte Ganancia Por Ciclo")
+
+    # Mostrar confirmación si se acaba de registrar un ciclo
+    if "reporte_recien_guardado" in st.session_state:
+        g = st.session_state.pop("reporte_recien_guardado")
+        st.success(f"✅ Ciclo #{g['ciclo']} registrado para **{g['usuario']}** con {g['ganancia']:+,.2f} USDT.")
+        st.toast(f"Ciclo #{g['ciclo']} guardado para {g['usuario']}")
+
+    # Aplicar actualizaciones pendientes de horario ANTES de instanciar widgets (evita StreamlitWidgetAlreadyInstantiatedError)
+    if "_pending_time_update" in st.session_state and st.session_state["_pending_time_update"]:
+        pending = st.session_state.pop("_pending_time_update")
+        for k, v in pending.items():
+            st.session_state[k] = v
 
     now_local = data_manager.get_now_local()
     ult_ciclo = data_manager.get_ultimo_ciclo_fin()
@@ -168,18 +187,22 @@ def render_vista(api_key, api_secret):
         st.subheader("⏱️ Horario Del Ciclo")
     with col_h_sync:
         if st.button("🔄 Sincronizar Horas", help="Restablece el inicio al fin del último ciclo y el fin a la hora actual", use_container_width=True):
+            upd_sync = {
+                "f_fin": now_local.date(),
+                "h_fn": now_local.strftime("%I") if now_local.strftime("%I") in HORAS_12 else HORAS_12[0],
+                "m_fn": now_local.strftime("%M"),
+                "p_fn": now_local.strftime("%p")
+            }
             if ult_ciclo and ult_ciclo.get("dt_fin"):
                 dt_res_ini = ult_ciclo["dt_fin"]
-                st.session_state["f_ini"] = dt_res_ini.date()
                 h_res = dt_res_ini.strftime("%I")
-                st.session_state["h_ini"] = h_res if h_res in HORAS_12 else HORAS_12[0]
-                st.session_state["m_ini"] = dt_res_ini.strftime("%M")
-                st.session_state["p_ini"] = dt_res_ini.strftime("%p")
-            st.session_state["f_fin"] = now_local.date()
-            h_res_fn = now_local.strftime("%I")
-            st.session_state["h_fn"] = h_res_fn if h_res_fn in HORAS_12 else HORAS_12[0]
-            st.session_state["m_fn"] = now_local.strftime("%M")
-            st.session_state["p_fn"] = now_local.strftime("%p")
+                upd_sync.update({
+                    "f_ini": dt_res_ini.date(),
+                    "h_ini": h_res if h_res in HORAS_12 else HORAS_12[0],
+                    "m_ini": dt_res_ini.strftime("%M"),
+                    "p_ini": dt_res_ini.strftime("%p")
+                })
+            programar_actualizacion_horario(**upd_sync)
             st.rerun()
 
     c_in1, c_in2, c_in3, c_in4 = st.columns([2, 1, 1, 1])
@@ -240,11 +263,13 @@ def render_vista(api_key, api_secret):
         if diff_min > 3:
             with c_btn:
                 if st.button(f"⚡ Pegar al Ciclo #{prev_ciclo['ciclo']}", use_container_width=True, key="btn_pegar_prev_header"):
-                    st.session_state["f_ini"] = dt_p_fin.date()
                     h_fix = dt_p_fin.strftime("%I")
-                    st.session_state["h_ini"] = h_fix if h_fix in HORAS_12 else HORAS_12[0]
-                    st.session_state["m_ini"] = dt_p_fin.strftime("%M")
-                    st.session_state["p_ini"] = dt_p_fin.strftime("%p")
+                    programar_actualizacion_horario(
+                        f_ini=dt_p_fin.date(),
+                        h_ini=h_fix if h_fix in HORAS_12 else HORAS_12[0],
+                        m_ini=dt_p_fin.strftime("%M"),
+                        p_ini=dt_p_fin.strftime("%p")
+                    )
                     st.rerun()
 
     st.divider()
@@ -384,18 +409,18 @@ def render_vista(api_key, api_secret):
         if st.button(f"⚡ Conciliar ciclo faltante ({dt_gap_ini_str} ➔ {dt_gap_fin_str})", type="primary", use_container_width=True, key="btn_conciliar_gap"):
             dt_g_ini = gap["dt_prev_fin"]
             dt_g_fin = gap["dt_inicio"]
-            st.session_state["f_ini"] = dt_g_ini.date()
             h_g_ini = dt_g_ini.strftime("%I")
-            st.session_state["h_ini"] = h_g_ini if h_g_ini in HORAS_12 else HORAS_12[0]
-            st.session_state["m_ini"] = dt_g_ini.strftime("%M")
-            st.session_state["p_ini"] = dt_g_ini.strftime("%p")
-
-            st.session_state["f_fin"] = dt_g_fin.date()
             h_g_fin = dt_g_fin.strftime("%I")
-            st.session_state["h_fn"] = h_g_fin if h_g_fin in HORAS_12 else HORAS_12[0]
-            st.session_state["m_fn"] = dt_g_fin.strftime("%M")
-            st.session_state["p_fn"] = dt_g_fin.strftime("%p")
-
+            programar_actualizacion_horario(
+                f_ini=dt_g_ini.date(),
+                h_ini=h_g_ini if h_g_ini in HORAS_12 else HORAS_12[0],
+                m_ini=dt_g_ini.strftime("%M"),
+                p_ini=dt_g_ini.strftime("%p"),
+                f_fin=dt_g_fin.date(),
+                h_fn=h_g_fin if h_g_fin in HORAS_12 else HORAS_12[0],
+                m_fn=dt_g_fin.strftime("%M"),
+                p_fn=dt_g_fin.strftime("%p")
+            )
             st.session_state["gap_detectado"] = None
             if "reporte_actual" in st.session_state:
                 del st.session_state["reporte_actual"]
@@ -475,13 +500,21 @@ def render_vista(api_key, api_secret):
                 st.session_state["gap_detectado"] = None
             if "dt_fin_dt" in rep:
                 next_ini = rep["dt_fin_dt"]
-                st.session_state["f_ini"] = next_ini.date()
                 h_next = next_ini.strftime("%I")
-                st.session_state["h_ini"] = h_next if h_next in HORAS_12 else HORAS_12[0]
-                st.session_state["m_ini"] = next_ini.strftime("%M")
-                st.session_state["p_ini"] = next_ini.strftime("%p")
-            st.success(f"✅ Ciclo #{nuevo_num_ciclo} registrado para **{usr_registro}** con {ganancia_final_ciclo:+,.2f} USDT.")
-            st.toast(f"Ciclo #{nuevo_num_ciclo} guardado para {usr_registro}")
+                programar_actualizacion_horario(
+                    f_ini=next_ini.date(),
+                    h_ini=h_next if h_next in HORAS_12 else HORAS_12[0],
+                    m_ini=next_ini.strftime("%M"),
+                    p_ini=next_ini.strftime("%p")
+                )
+            st.session_state["reporte_recien_guardado"] = {
+                "ciclo": nuevo_num_ciclo,
+                "usuario": usr_registro,
+                "ganancia": ganancia_final_ciclo
+            }
+            if "reporte_actual" in st.session_state:
+                del st.session_state["reporte_actual"]
+            st.rerun()
 
         st.divider()
 
