@@ -28,7 +28,7 @@ def get_now_local() -> datetime:
 DB_HISTORICO_FILE = "historico_ciclos.csv"
 DB_MANUAL_FILE = "operaciones_manuales.csv"
 
-COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin"]
+COLUMNS_HISTORICO = ["Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin", "Observacion"]
 COLUMNS_MANUAL = ["id", "Fecha_Hora", "tradeType", "amount", "unitPrice", "totalPrice", "commission", "fiat", "nota", "orderStatus", "Usuario"]
 
 def _tiene_gsheets_configurado():
@@ -86,6 +86,9 @@ def get_historico() -> pd.DataFrame:
         return df_init
 
     df = pd.read_csv(DB_HISTORICO_FILE)
+    for col in COLUMNS_HISTORICO:
+        if col not in df.columns:
+            df[col] = None
     return df
 
 def enriquecer_historico_fechas(df: pd.DataFrame) -> pd.DataFrame:
@@ -336,7 +339,7 @@ def guardar_ciclo(nuevo_registro: dict) -> bool:
 
     return True
 
-def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None, nuevo_capital: float = None, nuevo_retiro_admin: float = None) -> bool:
+def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_str: str = None, f_fin_str: str = None, f_hora_str: str = None, nuevo_capital: float = None, nuevo_retiro_admin: float = None, nueva_observacion: str = None) -> bool:
     df = get_historico()
     if df.empty:
         return False
@@ -375,6 +378,8 @@ def actualizar_ciclo_ajuste_y_fechas(ciclo_num: int, nuevo_ajuste: float, f_ini_
         datos["Fecha_Hora"] = str(f_hora_str)
     elif f_fin_str is not None:
         datos["Fecha_Hora"] = str(f_fin_str)
+    if nueva_observacion is not None:
+        datos["Observacion"] = str(nueva_observacion).strip()
 
     # 1. Guardar en PostgreSQL (db_manager)
     try:

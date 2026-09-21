@@ -443,7 +443,7 @@ def render_vista(api_key, api_secret):
         else:
             usr_registro = usuario_activo["username"]
 
-        col_aj1, col_aj2, col_aj3, col_aj4 = st.columns([1.2, 1.4, 1.8, 1.4])
+        col_aj1, col_aj2, col_aj3 = st.columns([1.2, 1.4, 2.0])
         with col_aj1:
             ajuste_val = st.number_input("Ajuste USDT (+/-):", value=0.00, step=0.10, format="%.2f", help="Ajuste técnico por diferencias, redondeos o comisiones")
         with col_aj2:
@@ -471,9 +471,16 @@ def render_vista(api_key, api_secret):
             {sub_info}
             """)
 
-        with col_aj4:
-            st.write("")
-            btn_registrar = st.button("📥 Registrar Ciclo", type="secondary", use_container_width=True)
+        col_obs, col_btn = st.columns([3.6, 1.4])
+        with col_obs:
+            observacion_val = st.text_input(
+                "💬 Observación / Comentario (opcional):",
+                placeholder="Ej: Compensación por redondeo, orden manual externa, etc.",
+                key="obs_ciclo_reg"
+            )
+        with col_btn:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            btn_registrar = st.button("📥 Registrar Ciclo", type="primary", use_container_width=True)
 
         if btn_registrar:
             df_h = data_manager.get_historico()
@@ -493,7 +500,8 @@ def render_vista(api_key, api_secret):
                 "Retiro_Admin": round(dinero_admin_val, 2),
                 "Usuario": usr_registro,
                 "Fecha_Inicio": rep.get("dt_inicio_str", ""),
-                "Fecha_Fin": rep.get("dt_fin_str", "")
+                "Fecha_Fin": rep.get("dt_fin_str", ""),
+                "Observacion": observacion_val.strip()
             }
             data_manager.guardar_ciclo(nuevo_registro)
             if "gap_detectado" in st.session_state:

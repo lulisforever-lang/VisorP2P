@@ -61,7 +61,10 @@ def init_db():
                     "USDT_Ganado" DOUBLE PRECISION,
                     "Ajuste" DOUBLE PRECISION,
                     "Retiro_Admin" DOUBLE PRECISION DEFAULT 0.0,
-                    "Usuario" TEXT
+                    "Usuario" TEXT,
+                    "Fecha_Inicio" TEXT,
+                    "Fecha_Fin" TEXT,
+                    "Observacion" TEXT DEFAULT ''
                 );
             """)
 
@@ -99,6 +102,7 @@ def init_db():
                 ALTER TABLE historico_ciclos ADD COLUMN IF NOT EXISTS "Fecha_Inicio" TEXT;
                 ALTER TABLE historico_ciclos ADD COLUMN IF NOT EXISTS "Fecha_Fin" TEXT;
                 ALTER TABLE historico_ciclos ADD COLUMN IF NOT EXISTS "Retiro_Admin" DOUBLE PRECISION DEFAULT 0.0;
+                ALTER TABLE historico_ciclos ADD COLUMN IF NOT EXISTS "Observacion" TEXT DEFAULT '';
             """)
             conn.commit()
 
@@ -217,7 +221,7 @@ def db_get_historico():
         return None
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
-            cur.execute('SELECT "Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin" FROM historico_ciclos ORDER BY "Ciclo" ASC;')
+            cur.execute('SELECT "Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin", "Observacion" FROM historico_ciclos ORDER BY "Ciclo" ASC;')
             rows = cur.fetchall()
             return pd.DataFrame(rows)
     except Exception as e:
@@ -233,8 +237,8 @@ def db_guardar_ciclo(reg: dict) -> bool:
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO historico_ciclos ("Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin")
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+                INSERT INTO historico_ciclos ("Fecha_Hora", "Ciclo", "Comision_Pct", "Tasa_Venta", "Tasa_Compra", "Capital", "Ganancia_Pct", "USDT_Ganado", "Ajuste", "Retiro_Admin", "Usuario", "Fecha_Inicio", "Fecha_Fin", "Observacion")
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
             """, (
                 str(reg.get("Fecha_Hora", "")),
                 int(reg.get("Ciclo", 0)),
@@ -248,7 +252,8 @@ def db_guardar_ciclo(reg: dict) -> bool:
                 float(reg.get("Retiro_Admin", 0.0)),
                 str(reg.get("Usuario", "Victoria")),
                 str(reg.get("Fecha_Inicio", "")) if reg.get("Fecha_Inicio") else "",
-                str(reg.get("Fecha_Fin", "")) if reg.get("Fecha_Fin") else ""
+                str(reg.get("Fecha_Fin", "")) if reg.get("Fecha_Fin") else "",
+                str(reg.get("Observacion", "")).strip() if reg.get("Observacion") else ""
             ))
             conn.commit()
         return True

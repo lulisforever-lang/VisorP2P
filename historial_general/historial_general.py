@@ -52,7 +52,7 @@ def eliminar_ciclo_dialog(ciclo_data: dict):
             st.rerun()
 
 @st.dialog("✏️ Editar Ciclo")
-def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="", f_fin_val="", ret_admin_actual=0.0):
+def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="", f_fin_val="", ret_admin_actual=0.0, obs_actual=""):
     profit_base = u_gan_actual - aj_actual
     now_local = data_manager.get_now_local()
 
@@ -125,6 +125,13 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
             help="Dinero entregado al administrador durante este ciclo a reponer al final del día."
         )
 
+    nueva_obs = st.text_input(
+        "💬 Observación / Comentario:",
+        value=str(obs_actual or ""),
+        key=f"dlg_obs_hg_{c_num}",
+        placeholder="Ej: Se compensó diferencia por redondeo, orden externa, etc."
+    )
+
     nueva_ganancia = profit_base + nuevo_ajuste
     nuevo_pct = (nueva_ganancia / cap * 100) if cap > 0 else 0.0
     dif_total = nuevo_ajuste - aj_actual
@@ -158,7 +165,7 @@ def editar_ajuste_dialog(c_num, aj_actual, u_gan_actual, cap, f_h, f_ini_val="",
                 str_ini = dt_ini_new.strftime("%d/%m/%Y %I:%M %p")
                 str_fin = dt_fin_new.strftime("%d/%m/%Y %I:%M %p")
                 str_hora = dt_fin_new.strftime("%d/%m/%Y %I:%M:%S %p")
-                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora, nuevo_retiro_admin=nuevo_ret_adm):
+                if data_manager.actualizar_ciclo_ajuste_y_fechas(c_num, nuevo_ajuste, str_ini, str_fin, str_hora, nuevo_retiro_admin=nuevo_ret_adm, nueva_observacion=nueva_obs):
                     st.toast(f"✅ Ciclo #{c_num} actualizado exitosamente")
                     time.sleep(0.4)
                     st.rerun()
@@ -424,6 +431,9 @@ def render_vista():
 
         pill_ret_admin = f'<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; display: inline-flex; align-items: center;"><span style="color: #f59e0b; font-weight: 600;">👤 Entregado a Admin:</span> <strong style="color: #f59e0b; margin-left: 4px;">{ret_adm:,.2f} USDT</strong></div>' if ret_adm > 0 else ''
 
+        obs = str(r.get("Observacion", "")).strip() if pd.notnull(r.get("Observacion")) and str(r.get("Observacion")).strip() not in ["", "None", "nan"] else ""
+        pill_obs = f'<div style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.3); padding: 2px 8px; border-radius: 4px; font-size: 0.78rem; display: inline-flex; align-items: center;"><span style="color: #58a6ff; font-weight: 600;">💬 Nota:</span> <span style="color: #e6edf3; margin-left: 4px;">{obs}</span></div>' if obs else ''
+
         with st.container(border=True):
             st.html(f"""
             <div class="cycle-card-content {cls_pos_neg}">
@@ -471,11 +481,12 @@ def render_vista():
                             <strong style="color: {color_aj};">{texto_aj}</strong>
                         </div>
                         {pill_ret_admin}
+                        {pill_obs}
                     </div>
                     """)
                 with col_ed:
                     if st.button("✏️", key=f"btn_edit_aj_gen_{c_num}", type="secondary", help=f"Editar Ciclo #{c_num}"):
-                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin, ret_admin_actual=ret_adm)
+                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin, ret_admin_actual=ret_adm, obs_actual=obs)
                 with col_del:
                     if st.button("🗑️", key=f"btn_del_c_hg_{c_num}", type="secondary", help=f"Eliminar Ciclo #{c_num}"):
                         eliminar_ciclo_dialog(r.to_dict())
@@ -489,8 +500,9 @@ def render_vista():
                             <strong style="color: {color_aj};">{texto_aj}</strong>
                         </div>
                         {pill_ret_admin}
+                        {pill_obs}
                     </div>
                     """)
                 with col_ed:
                     if st.button("✏️", key=f"btn_edit_aj_gen_{c_num}", type="secondary", help=f"Editar Ciclo #{c_num}"):
-                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin, ret_admin_actual=ret_adm)
+                        editar_ajuste_dialog(c_num, aj, u_gan, cap, f_h, f_ini, f_fin, ret_admin_actual=ret_adm, obs_actual=obs)
